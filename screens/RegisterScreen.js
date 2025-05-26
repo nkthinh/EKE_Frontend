@@ -15,7 +15,7 @@ export default function RegisterScreen() {
     setIsSuccessModalVisible(true);
     setTimeout(() => {
       setIsSuccessModalVisible(false);
-      navigation.navigate('Login');
+      navigation.navigate('CompleteProfile');
     }, 2000);
   };
 
