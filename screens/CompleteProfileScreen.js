@@ -8,13 +8,14 @@ export default function CompleteProfileScreen() {
   const [fullName, setFullName] = useState('example@example.com');
   const [gender, setGender] = useState('Nam');
   const [phoneNumber, setPhoneNumber] = useState('123 456 789');
-  const [birthYear, setBirthYear] = useState(new Date(1990, 0, 1)); // Default date
+  const [birthYear, setBirthYear] = useState(new Date('1990-01-01T00:00:00+07:00')); // Explicitly set UTC+07:00 for Vietnam
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || birthYear;
-    setShowDatePicker(Platform.OS === 'ios'); // Keep open on iOS, close on Android
-    setBirthYear(currentDate);
+    const adjustedDate = new Date(currentDate.getTime());
+    setShowDatePicker(Platform.OS === 'ios'); 
+    setBirthYear(adjustedDate);
   };
 
   return (
@@ -41,9 +42,9 @@ export default function CompleteProfileScreen() {
           <Text style={styles.label}>Họ và tên</Text>
           <TextInput
             style={styles.input}
+            placeholder="example@example.com"
             value={fullName}
             onChangeText={setFullName}
-            editable={false} // Non-editable for now
           />
         </View>
 
@@ -55,7 +56,6 @@ export default function CompleteProfileScreen() {
               selectedValue={gender}
               style={styles.picker}
               onValueChange={(itemValue) => setGender(itemValue)}
-              enabled={true} 
             >
               <Picker.Item label="Nam" value="Nam" />
               <Picker.Item label="Nữ" value="Nữ" />
@@ -68,10 +68,10 @@ export default function CompleteProfileScreen() {
           <Text style={styles.label}>Số điện thoại</Text>
           <TextInput
             style={styles.input}
+            placeholder="123 456 789"
             value={phoneNumber}
             onChangeText={setPhoneNumber}
             keyboardType="numeric"
-            editable={false} // Non-editable for now
           />
         </View>
 
@@ -83,7 +83,7 @@ export default function CompleteProfileScreen() {
             onPress={() => setShowDatePicker(true)}
           >
             <Text style={styles.dateText}>
-              {birthYear.toISOString().split('T')[0]}
+              {birthYear.toLocaleDateString('vi-VN')} {/* Use Vietnamese locale */}
             </Text>
           </TouchableOpacity>
           {showDatePicker && (
@@ -108,7 +108,7 @@ export default function CompleteProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff', // Keep background white
+    backgroundColor: '#fff',
     paddingHorizontal: 20,
     paddingTop: 40,
   },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   },
   topHeaderText: {
     fontSize: 16,
-    color: '#28a745', // Green text
+    color: '#28a745',
     marginBottom: 10,
     textAlign: 'center',
   },
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#000',
     marginBottom: 5,
-    textAlign: '', 
+    textAlign: 'left',
   },
   subHeaderText: {
     fontSize: 14,
     color: '#666',
     marginBottom: 20,
-    textAlign: 'left', // Keep paragraph left-aligned
+    textAlign: 'left',
   },
   iconContainer: {
     position: 'relative',
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 10,
     right: 0,
-    backgroundColor: '#28a745', // Green background for pen icon
+    backgroundColor: '#28a745',
     borderRadius: 15,
     padding: 5,
   },
@@ -166,24 +166,29 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 25, // Rounder inputs
+    borderRadius: 25,
     padding: 10,
     fontSize: 16,
     backgroundColor: '#fff',
+    height: 50,
   },
   pickerContainer: {
     borderWidth: 1,
     borderColor: '#ccc',
-    borderRadius: 25, // Rounder picker
+    borderRadius: 25,
     backgroundColor: '#fff',
+    height: 55, 
+    justifyContent: 'center',
+    paddingVertical: 5, 
   },
   picker: {
-    height: 50,
+    height: 60, 
     width: '100%',
   },
   dateText: {
     fontSize: 16,
     color: '#333',
+    lineHeight: 30,
   },
   updateButton: {
     backgroundColor: '#28a745',
@@ -191,8 +196,8 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignItems: 'center',
     marginBottom: 30,
-    width: '50%', // Shorter button
-    alignSelf: 'center', // Center the button
+    width: '50%',
+    alignSelf: 'center',
   },
   buttonText: {
     color: '#fff',
