@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image, Modal } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome'; 
+import EKEImage from '../assets/EKE.jpg';
 
 export default function RegisterScreen() {
   const [fullName, setFullName] = useState('');
@@ -44,7 +45,7 @@ export default function RegisterScreen() {
       {/* Main Register Screen Content */}
       <View style={styles.logoContainer}>
         <Image
-          source={{ uri: 'https://via.placeholder.com/100' }} // Replace with your logo URL
+          source={EKEImage} // Replace with your logo URL
           style={styles.logo}
         />
         <Text style={styles.title}>Đăng Ký</Text>
@@ -118,8 +119,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: "100%",
+    maxWidth:200,
+    height: 130,
     marginBottom: 10,
   },
   title: {
