@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome'; 
-
+import EKEImage from '../assets/EKE.jpg';
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +20,7 @@ export default function LoginScreen() {
     <View style={styles.container}>
       <View style={styles.logoContainer}>
         <Image
-          source={{ uri: 'https://via.placeholder.com/100' }} // Replace with your logo URL
+          source={EKEImage}
           style={styles.logo}
         />
         <Text style={styles.title}>Đăng Nhập</Text>
@@ -88,8 +88,9 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   logo: {
-    width: 100,
-    height: 100,
+    width: "100%",
+    maxWidth:200,
+    height: 130,
     marginBottom: 10,
   },
   title: {
