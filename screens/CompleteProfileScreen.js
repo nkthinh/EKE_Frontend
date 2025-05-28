@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     height: 55, 
     justifyContent: 'center',
-    paddingVertical: 5, 
+    paddingVertical: 5, //
   },
   picker: {
     height: 60, 
