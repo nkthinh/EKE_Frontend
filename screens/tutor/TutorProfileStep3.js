@@ -150,7 +150,7 @@ const TutorProfileStep3 = ({ navigation }) => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.nextButton}
-                            onPress={() => navigation.navigate('TutorMain')}
+                            onPress={() => navigation.navigate('TutorHome')}
                         >
                             <Text style={styles.buttonText}>Hoàn Thành</Text>
                         </TouchableOpacity>

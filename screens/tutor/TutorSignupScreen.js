@@ -29,11 +29,11 @@ const TutorSignupScreen = ({ navigation }) => {
     };
 
     const handleRegister = () => {
-        // TODO: Bạn có thể thêm validate form ở đây nếu muốn
+
         setModalVisible(true);
         setTimeout(() => {
             setModalVisible(false);
-            navigation.navigate('PolicyScreen'); // Điều hướng sang trang chính sách
+            navigation.navigate('RoleSelection');
         }, 2000); // 2 giây
     };
 

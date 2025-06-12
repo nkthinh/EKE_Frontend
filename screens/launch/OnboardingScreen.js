@@ -29,13 +29,6 @@ const slides = [
         description:
             'Ứng dụng tiên phong trong việc kết nối học viên với gia sư thông qua AI thông minh, giúp bạn tìm kiếm gia sư phù hợp nhanh chóng, chính xác, dựa trên trình độ, nhu cầu và lịch học cá nhân.',
     },
-    {
-        key: '4',
-        title: 'NỀN TẢNG GIÁO DỤC BẰNG CÔNG NGHỆ',
-        topImage: require('../../assets/logo1.png'),
-        image: require('../../assets/role.png'),
-        isFinal: true,
-    },
 ];
 
 const OnboardingScreen = ({ navigation }) => {
@@ -45,62 +38,32 @@ const OnboardingScreen = ({ navigation }) => {
     const nextSlide = () => {
         if (index < slides.length - 1) {
             setIndex(index + 1);
-        }
-    };
-
-    const goToRoleScreen = (role) => {
-        if (role === 'Gia sư') {
-            navigation.navigate('TutorRegister');
         } else {
-            // Chuyển sang màn hình khác nếu cần
-            alert('Bạn chọn Phụ huynh / Học viên');
+            navigation.navigate('TutorRegister');
         }
     };
 
     return (
         <View style={styles.container}>
-            {slide.isFinal ? (
-                <>
-                    <Image source={slide.topImage} style={styles.finalLogo} />
-                    <Text style={styles.finalTitle}>{slide.title}</Text>
-                    <Image source={slide.image} style={styles.finalImage} />
-
-                    <View style={styles.roleContainer}>
-                        <TouchableOpacity
-                            style={styles.roleButton}
-                            onPress={() => goToRoleScreen('Gia sư')}
-                        >
-                            <Text style={styles.roleText}>👨‍🏫 Gia Sư</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.roleButton}
-                            onPress={() => goToRoleScreen('Phụ huynh / Học viên')}
-                        >
-                            <Text style={styles.roleText}>🧒 Phụ Huynh / Học Viên</Text>
-                        </TouchableOpacity>
-                    </View>
-                </>
-            ) : slide.key === '1' ? (
-                <>
-                    <Image source={slide.topImage} style={styles.topImage} />
-                    <Text style={styles.title}>{slide.title}</Text>
-                    <Image source={slide.bottomImage} style={styles.bottomImage} />
-                </>
-            ) : (
-                <>
-                    <Text style={styles.title}>{slide.title}</Text>
-                    <Text style={styles.desc}>{slide.description}</Text>
-                    <Image source={slide.image} style={styles.image} />
-                </>
+            {slide.topImage && (
+                <Image source={slide.topImage} style={styles.topImage} />
+            )}
+            <Text style={styles.title}>{slide.title}</Text>
+            {slide.description && (
+                <Text style={styles.desc}>{slide.description}</Text>
+            )}
+            {slide.bottomImage && (
+                <Image source={slide.bottomImage} style={styles.bottomImage} />
+            )}
+            {slide.image && (
+                <Image source={slide.image} style={styles.image} />
             )}
 
-            {!slide.isFinal && (
-                <TouchableOpacity style={styles.button} onPress={nextSlide}>
-                    <Text style={styles.buttonText}>
-                        {index === slides.length - 2 ? 'Bắt đầu' : 'Tiếp tục'}
-                    </Text>
-                </TouchableOpacity>
-            )}
+            <TouchableOpacity style={styles.button} onPress={nextSlide}>
+                <Text style={styles.buttonText}>
+                    {index === slides.length - 1 ? 'Bắt đầu' : 'Tiếp tục'}
+                </Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -134,26 +97,6 @@ const styles = StyleSheet.create({
         resizeMode: 'contain',
         marginBottom: 30,
     },
-    finalLogo: {
-        width: width * 0.3,
-        height: 150,
-        resizeMode: 'contain',
-        marginTop: 40,
-        marginBottom: 0,
-    },
-    finalTitle: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        color: '#333',
-        marginBottom: 16,
-    },
-    finalImage: {
-        width: width * 0.9,
-        height: 260,
-        resizeMode: 'contain',
-        marginBottom: 20,
-    },
     title: {
         fontSize: 30,
         fontWeight: 'bold',
@@ -182,27 +125,6 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 20,
         fontWeight: 'bold',
-    },
-    roleContainer: {
-        marginBottom: 30,
-        width: '100%',
-        alignItems: 'center',
-    },
-    roleButton: {
-        borderWidth: 1.8,
-        borderColor: '#31B7EC',
-        paddingVertical: 14,
-        paddingHorizontal: 25,
-        borderRadius: 30,
-        marginVertical: 10,
-        width: '80%',
-        alignItems: 'center',
-        backgroundColor: '#fff',
-    },
-    roleText: {
-        fontSize: 25,
-        fontWeight: 'bold',
-        color: '#31B7EC',
     },
 });
 
