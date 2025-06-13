@@ -1,28 +1,48 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Image } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import Icon from 'react-native-vector-icons/FontAwesome'; 
-import EKEImage from '../assets/EKE.jpg';
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+import { useNavigation } from "@react-navigation/native";
+import Icon from "react-native-vector-icons/FontAwesome";
+import EKEImage from "../assets/EKE.jpg";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import IIcon from "react-native-vector-icons/Ionicons";
+
 export default function LoginScreen() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const navigation = useNavigation();
 
-  const handleLogin = () => {
-    console.log('Login with:', email, password);
+  const handleLogin = async () => {
+    try {
+      const role = await AsyncStorage.getItem("userRole");
+      console.log(role);
+      if (role === "Student") {
+        navigation.navigate("StudentHomeScreen");
+      } else if (role === "Lecturer") {
+        navigation.navigate("TeacherHomeScreen");
+      }
+    } catch (error) {
+      console.log("Error retrieving role:", error);
+    }
   };
 
   const handleRegisterRedirect = () => {
-    navigation.navigate('Register');
+    navigation.navigate("Register");
   };
 
   return (
     <View style={styles.container}>
+      <TouchableOpacity onPress={() => navigation.navigate("Onboarding3")}>
+        <IIcon name="arrow-back" size={30} color="#ff4444" />
+      </TouchableOpacity>
       <View style={styles.logoContainer}>
-        <Image
-          source={EKEImage}
-          style={styles.logo}
-        />
+        <Image source={EKEImage} style={styles.logo} />
         <Text style={styles.title}>Đăng Nhập</Text>
       </View>
 
@@ -53,7 +73,10 @@ export default function LoginScreen() {
         <Text style={styles.buttonText}>Đăng Nhập</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.registerButton} onPress={handleRegisterRedirect}>
+      <TouchableOpacity
+        style={styles.registerButton}
+        onPress={handleRegisterRedirect}
+      >
         <Text style={styles.buttonText}>Đăng Ký</Text>
       </TouchableOpacity>
 
@@ -62,15 +85,27 @@ export default function LoginScreen() {
       </TouchableOpacity>
 
       <View style={styles.socialIconsContainer}>
-        <Icon name="instagram" size={30} color="#000" style={styles.socialIcon} />
+        <Icon
+          name="instagram"
+          size={30}
+          color="#000"
+          style={styles.socialIcon}
+        />
         <Icon name="google" size={30} color="#000" style={styles.socialIcon} />
         <Icon name="twitter" size={30} color="#000" style={styles.socialIcon} />
-        <Icon name="whatsapp" size={30} color="#000" style={styles.socialIcon} />
+        <Icon
+          name="whatsapp"
+          size={30}
+          color="#000"
+          style={styles.socialIcon}
+        />
       </View>
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Thông Tin Hỗ Trợ</Text>
-        <Text style={styles.footerText}>Giới Thiệu • Điều Khoản • Chính Sách</Text>
+        <Text style={styles.footerText}>
+          Giới Thiệu • Điều Khoản • Chính Sách
+        </Text>
       </View>
     </View>
   );
@@ -79,88 +114,88 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
+    backgroundColor: "#fff",
+    justifyContent: "center",
     paddingHorizontal: 20,
   },
   logoContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 40,
   },
   logo: {
     width: "100%",
-    maxWidth:200,
+    maxWidth: 200,
     height: 130,
     marginBottom: 10,
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#28a745', // Green title
+    fontWeight: "bold",
+    color: "#28a745", // Green title
   },
   inputContainer: {
     marginBottom: 20,
   },
   label: {
     fontSize: 16,
-    color: '#333',
+    color: "#333",
     marginBottom: 5,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 25,
     padding: 10,
     fontSize: 16,
   },
   loginButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
     padding: 10,
     borderRadius: 20,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 10,
-    width: '60%', 
-    alignSelf: 'center', 
+    width: "60%",
+    alignSelf: "center",
   },
   registerButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: "#28a745",
     padding: 10,
     borderRadius: 20,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
-    width: '60%',
-    alignSelf: 'center',
+    width: "60%",
+    alignSelf: "center",
   },
   buttonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   forgotPassword: {
-    color: '#007bff',
-    textAlign: 'center',
+    color: "#007bff",
+    textAlign: "center",
     marginBottom: 20,
   },
   socialIconsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
     marginBottom: 20,
   },
   socialIcon: {
     marginHorizontal: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 15,
     padding: 5,
     width: 40,
     height: 40,
-    textAlign: 'center',
-    lineHeight: 30, 
+    textAlign: "center",
+    lineHeight: 30,
   },
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   footerText: {
-    color: '#666',
+    color: "#666",
     fontSize: 12,
   },
 });
