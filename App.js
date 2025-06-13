@@ -16,6 +16,10 @@ import {
 import { useEffect } from "react";
 import HomeScreen from "./screens/StudentScreens/HomeScreen";
 import TeacherHomeScreen from "./screens/TeacherScreens/TeacherHomeScreen";
+import MessageScreen from "./screens/StudentScreens/MessageScreen";
+import DetailMessageScreen from "./screens/StudentScreens/DetailMessageScreen";
+import LecturerFeedbackScreen from "./screens/StudentScreens/LecturerFeedbackScreen";
+import FeedbackScreen from "./screens/StudentScreens/FeedbackScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -76,6 +80,26 @@ function App() {
         <Stack.Screen
           name="TeacherHomeScreen"
           component={TeacherHomeScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="StudentMessageScreen"
+          component={MessageScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DetailMessageScreen"
+          component={DetailMessageScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="LecturerFeedbackScreen"
+          component={LecturerFeedbackScreen}
+          options={{ headerShown: false }}
+        />
+         <Stack.Screen
+          name="FeedbackScreen"
+          component={FeedbackScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
