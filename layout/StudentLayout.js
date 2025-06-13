@@ -12,10 +12,10 @@ const StudentLayout = ({ children, navigation }) => {
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentHomeScreen')}>
           <Icon name="home" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Messages')}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentMessageScreen')}>
           <Icon name="chatbubble" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Achievements')}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('LecturerFeedbackScreen')}>
           <Icon name="medal" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('Profile')}>
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     backgroundColor: '#31B7EC',
-    paddingVertical: 10,
+    paddingVertical: 20,
     position: 'absolute',
     bottom: 0,
     width: '100%',
