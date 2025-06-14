@@ -10,11 +10,11 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomMenu from '../components/BottomMenu';
 
 const notifications = [
-    { title: 'Lịch Học Đã Được Cập Nhật', time: 'June 10 - 10:00 AM', icon: 'star', color: '#FF5E5E', section: 'Today' },
-    { title: 'Đừng Quên Lịch Học Sáng Nay', time: 'June 10 - 8:00 AM', icon: 'lightbulb-on', color: '#A9E34B', section: 'Today' },
-    { title: 'Đã Hoàn Thành Buổi Học', time: 'June 09 - 6:00 PM', icon: 'trophy', color: '#D8F561', section: 'Yesterday' },
-    { title: 'Đừng Quên Lịch Học Tối Nay', time: 'June 09 - 3:00 PM', icon: 'clock-outline', color: '#FFA726', section: 'Yesterday' },
-    { title: 'Bài Tập Đã Được Cập Nhật', time: 'June 09 - 11:00 AM', icon: 'file-document', color: '#448AFF', section: 'Yesterday' },
+    { title: 'Lịch Học Đã Được Cập Nhật', time: 'June 10 - 10:00 AM', icon: 'star', color: '#FF5E5E', section: 'Hôm nay' },
+    { title: 'Đừng Quên Lịch Học Sáng Nay', time: 'June 10 - 8:00 AM', icon: 'lightbulb-on', color: '#A9E34B', section: 'Hôm nay' },
+    { title: 'Đã Hoàn Thành Buổi Học', time: 'June 09 - 6:00 PM', icon: 'trophy', color: '#D8F561', section: 'Hôm qua' },
+    { title: 'Đừng Quên Lịch Học Tối Nay', time: 'June 09 - 3:00 PM', icon: 'clock-outline', color: '#FFA726', section: 'Hôm qua' },
+    { title: 'Bài Tập Đã Được Cập Nhật', time: 'June 09 - 11:00 AM', icon: 'file-document', color: '#448AFF', section: 'Hôm qua' },
     { title: 'Lớp Học Mới Đã Bắt Đầu', time: 'May 29 - 9:00 AM', icon: 'star-circle', color: '#00C853', section: 'May 29 - 20XX' },
 ];
 

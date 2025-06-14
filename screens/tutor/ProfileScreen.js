@@ -80,8 +80,8 @@ const styles = StyleSheet.create({
     // TOP
     topContainer: {
         backgroundColor: '#fff',
-        borderBottomLeftRadius: 220,
-        borderBottomRightRadius: 220,
+        borderBottomLeftRadius: 260,
+        borderBottomRightRadius: 260,
         alignItems: 'center',
         paddingTop: 60,
         paddingBottom: 45,
@@ -91,8 +91,9 @@ const styles = StyleSheet.create({
         shadowRadius: 10,
         elevation: 8,
         marginBottom: 40,
-        width: '120%',
-        marginLeft: -40,
+        width: '130%',
+        marginLeft: -60,
+        marginRight: -60,
     },
     logo: {
         width: 150,
@@ -134,9 +135,9 @@ const styles = StyleSheet.create({
         bottom: -15,
         alignSelf: 'center',
         backgroundColor: '#256DFF',
-        paddingHorizontal: 12,
+        paddingHorizontal: 13,
         paddingVertical: 4,
-        borderRadius: 12,
+        borderRadius: 16,
         zIndex: 2,
     },
     idText: {
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
     actionRow: {
         flexDirection: 'row',
         justifyContent: 'space-around',
-        width: '85%',
+        width: '80%',
         marginTop: 20,
         paddingHorizontal: 30,
     },

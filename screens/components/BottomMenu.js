@@ -11,7 +11,7 @@ const BottomMenu = ({ navigation }) => {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('ChatListScreen')}>
-                <Icon name="message-text" size={36} color="#fff" />
+                <Icon name="chat" size={36} color="#fff" />
                 <Text style={styles.label}>Chat</Text>
             </TouchableOpacity>
 
