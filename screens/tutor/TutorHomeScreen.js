@@ -47,7 +47,7 @@ const TutorHomeScreen = ({ navigation }) => {
                 <View style={styles.row}>
                     <View style={styles.leftGreeting}>
                         <Text style={styles.greeting}>Xin Chào,</Text>
-                        <Text style={styles.username}>ABCDE</Text>
+                        <Text style={styles.username}>Thao</Text>
                     </View>
                     <View style={styles.rightIcons}>
 
