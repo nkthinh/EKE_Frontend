@@ -15,7 +15,8 @@ import * as ImagePicker from 'expo-image-picker';
 
 const { width } = Dimensions.get('window');
 
-const TutorProfileStep2 = ({ navigation }) => {
+const TutorProfileStep2 = ({ navigation, route }) => {
+    const { step1Data } = route.params;
     const [certificate, setCertificate] = useState(null);
     const [form, setForm] = useState({
         title: 'Sinh viên',
@@ -116,7 +117,7 @@ const TutorProfileStep2 = ({ navigation }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                     style={styles.button}
-                    onPress={() => navigation.navigate('TutorProfileStep3')}
+                    onPress={() => navigation.navigate('TutorProfileStep3', { step1Data, step2Data: form })}
                 >
                     <Text style={styles.buttonText}>Tiếp tục</Text>
                 </TouchableOpacity>

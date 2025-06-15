@@ -1,22 +1,37 @@
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    TouchableOpacity,
-    ScrollView,
-    StyleSheet,
-    Dimensions,
+    View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import BottomMenu from '../components/BottomMenu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UpgradeScreen = ({ navigation }) => {
     const [selected, setSelected] = useState('Silver');
 
+    const handleRegister = async () => {
+        const today = new Date().toISOString();
+        const nextDate = new Date();
+        nextDate.setMonth(nextDate.getMonth() + 1);
+
+        const plan = {
+            name: selected,
+            startDate: today,
+            nextRenewalDate: nextDate.toISOString(),
+            autoRenew: true,
+        };
+
+        try {
+            await AsyncStorage.setItem('subscriptionPlan', JSON.stringify(plan));
+            alert(`Đăng ký gói ${selected} thành công!`);
+            navigation.navigate('WalletScreen');
+        } catch (error) {
+            alert('Lỗi khi lưu gói đăng ký.');
+        }
+    };
+
     return (
         <View style={styles.wrapper}>
-            {/* Nút quay lại */}
-            <TouchableOpacity onPress={() => navigation.navigate('ProfileScreen')} style={styles.backButton}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                 <Icon name="arrow-left" size={30} color="#000" />
             </TouchableOpacity>
 
@@ -31,10 +46,7 @@ const UpgradeScreen = ({ navigation }) => {
                 ].map((item) => (
                     <TouchableOpacity
                         key={item.name}
-                        style={[
-                            styles.option,
-                            selected === item.name && styles.optionSelected,
-                        ]}
+                        style={[styles.option, selected === item.name && styles.optionSelected]}
                         onPress={() => setSelected(item.name)}
                     >
                         <View>
@@ -42,12 +54,7 @@ const UpgradeScreen = ({ navigation }) => {
                             <Text style={styles.optionDesc}>Thanh toán hàng tháng</Text>
                         </View>
                         <Text style={styles.price}>{item.price}</Text>
-                        <Icon
-                            name={
-                                selected === item.name
-                                    ? 'check-circle'
-                                    : 'check-circle-outline'
-                            }
+                        <Icon name={selected === item.name ? 'check-circle' : 'check-circle-outline'}
                             size={30}
                             color={selected === item.name ? '#3C90EF' : '#ccc'}
                         />
@@ -67,54 +74,30 @@ const UpgradeScreen = ({ navigation }) => {
                     </View>
                 ))}
 
-                <TouchableOpacity style={styles.registerButton}>
+                <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
                     <Text style={styles.registerText}>Đăng Ký</Text>
                 </TouchableOpacity>
             </ScrollView>
-
-
         </View>
     );
 };
 
 const { width } = Dimensions.get('window');
-
 const styles = StyleSheet.create({
-    wrapper: {
-        flex: 1,
-        backgroundColor: '#fff',
-    },
-    container: {
-        padding: 24,
-        paddingBottom: 100,
-        paddingTop: 100,
-    },
+    wrapper: { flex: 1, backgroundColor: '#fff' },
+    container: { padding: 24, paddingBottom: 100, paddingTop: 100 },
     backButton: {
         position: 'absolute',
         top: 40,
         left: 20,
-        zIndex: 10,
         backgroundColor: '#fff',
         padding: 8,
         borderRadius: 20,
         elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        zIndex: 10,
     },
-    title: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        textAlign: 'center',
-        marginBottom: 4,
-    },
-    subTitle: {
-        textAlign: 'center',
-        color: '#888',
-        fontSize: 18,
-        marginBottom: 24,
-    },
+    title: { fontSize: 26, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
+    subTitle: { textAlign: 'center', color: '#888', fontSize: 18, marginBottom: 24 },
     option: {
         backgroundColor: '#e7f3ff',
         borderRadius: 14,
@@ -130,26 +113,10 @@ const styles = StyleSheet.create({
         borderWidth: 1.5,
         borderColor: '#3C90EF',
     },
-    optionTitle: {
-        fontSize: 20,
-        fontWeight: 'bold',
-    },
-    optionDesc: {
-        fontSize: 16,
-        color: '#555',
-        marginTop: 2,
-    },
-    price: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginHorizontal: 12,
-    },
-    featureHeader: {
-        fontSize: 22,
-        fontWeight: '600',
-        marginTop: 30,
-        marginBottom: 14,
-    },
+    optionTitle: { fontSize: 20, fontWeight: 'bold' },
+    optionDesc: { fontSize: 16, color: '#555', marginTop: 2 },
+    price: { fontSize: 18, fontWeight: 'bold', marginHorizontal: 12 },
+    featureHeader: { fontSize: 22, fontWeight: '600', marginTop: 30, marginBottom: 14 },
     feature: {
         flexDirection: 'row',
         justifyContent: 'space-between',
@@ -159,12 +126,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 12,
     },
-    featureText: {
-        fontSize: 18,
-        color: '#333',
-        flex: 1,
-        paddingRight: 10,
-    },
+    featureText: { fontSize: 18, color: '#333', flex: 1, paddingRight: 10 },
     registerButton: {
         backgroundColor: '#31B7EC',
         paddingVertical: 16,
@@ -172,11 +134,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 30,
     },
-    registerText: {
-        fontSize: 22,
-        color: '#fff',
-        fontWeight: 'bold',
-    },
+    registerText: { fontSize: 22, color: '#fff', fontWeight: 'bold' },
 });
 
 export default UpgradeScreen;

@@ -11,10 +11,12 @@ import {
     Platform,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
-const TutorProfileStep3 = ({ navigation }) => {
+const TutorProfileStep3 = ({ navigation, route }) => {
+    const { step1Data, step2Data } = route.params;
     const [description, setDescription] = useState('');
     const [subjects, setSubjects] = useState([
         { id: 1, subject: null, level: null, fee: '', subjectOpen: false, levelOpen: false }
@@ -50,6 +52,17 @@ const TutorProfileStep3 = ({ navigation }) => {
     const removeSubject = (index) => {
         const updated = subjects.filter((_, i) => i !== index);
         setSubjects(updated);
+    };
+
+    const handleFinish = async () => {
+        const fullProfile = {
+            ...step1Data,
+            ...step2Data,
+            description,
+            subjects,
+        };
+        await AsyncStorage.setItem('tutorProfile', JSON.stringify(fullProfile));
+        navigation.navigate('TutorHome');
     };
 
     return (
@@ -150,7 +163,7 @@ const TutorProfileStep3 = ({ navigation }) => {
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.nextButton}
-                            onPress={() => navigation.navigate('TutorHome')}
+                            onPress={handleFinish}
                         >
                             <Text style={styles.buttonText}>Hoàn Thành</Text>
                         </TouchableOpacity>
