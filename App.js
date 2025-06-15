@@ -18,6 +18,8 @@ import UpgradeScreen from './screens/tutor/UpgradeScreen';
 import NotificationScreen from './screens/tutor/NotificationScreen';
 import ChatListScreen from './screens/match/ChatListScreen';
 import ChatDetailScreen from './screens/match/ChatDetailScreen';
+import TutorProfileView from './screens/tutor/TutorProfileView';
+import WalletScreen from './screens/tutor/WalletScreen';
 const Stack = createNativeStackNavigator();
 
 
@@ -42,6 +44,8 @@ function App() {
         <Stack.Screen name="NotificationScreen" component={NotificationScreen} />
         <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
         <Stack.Screen name="ChatDetailScreen" component={ChatDetailScreen} />
+        <Stack.Screen name="TutorProfileView" component={TutorProfileView} />
+        <Stack.Screen name="WalletScreen" component={WalletScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

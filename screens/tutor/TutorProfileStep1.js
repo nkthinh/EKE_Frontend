@@ -80,7 +80,7 @@ const TutorProfileStep1 = ({ navigation }) => {
             <Text style={styles.label}>Tỉnh/Thành Phố</Text>
             <TextInput style={styles.input} value={form.city} onChangeText={(t) => handleChange('city', t)} />
 
-            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('TutorProfileStep2')}>
+            <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('TutorProfileStep2', { step1Data: form })}>
                 <Text style={styles.buttonText}>Tiếp Tục</Text>
             </TouchableOpacity>
         </ScrollView>

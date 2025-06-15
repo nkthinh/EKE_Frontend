@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import BottomMenu from '../components/BottomMenu';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const { width } = Dimensions.get('window');
 
 const AccountScreen = ({ navigation }) => {
+    const [subscription, setSubscription] = useState(null);
+
+    useEffect(() => {
+        const fetchPlan = async () => {
+            const json = await AsyncStorage.getItem('subscriptionPlan');
+            if (json) setSubscription(JSON.parse(json));
+        };
+        fetchPlan();
+    }, []);
     return (
         <View style={styles.container}>
             {/* PHẦN TRÊN: Vòng bo trắng */}
@@ -28,23 +37,22 @@ const AccountScreen = ({ navigation }) => {
 
                 <View style={styles.actionRow}>
                     {[
-                        { icon: 'logout', label: 'Đăng Xuất' },
-                        { icon: 'pencil', label: 'Hồ Sơ', isProfile: true },
-                        { icon: 'wallet', label: 'Ví Tiền' },
+                        { icon: 'logout', label: 'Đăng Xuất', onPress: () => navigation.replace('TutorRegister') },
+                        { icon: 'pencil', label: 'Hồ Sơ', isProfile: true, onPress: () => navigation.navigate('TutorProfileView') },
+                        { icon: 'wallet', label: 'Gói ĐK', onPress: () => navigation.replace('WalletScreen') }
+
                     ].map((btn, index) => (
-                        <View
+                        <TouchableOpacity
                             key={index}
-                            style={[
-                                styles.actionItem,
-                                btn.isProfile && { marginTop: 40 }, // 👈 lệch riêng nút "Hồ Sơ"
-                            ]}
+                            style={[styles.actionItem, btn.isProfile && { marginTop: 40 }]}
+                            onPress={btn.onPress}
                         >
                             <View style={styles.circle}>
                                 <Icon name={btn.icon} size={35} color="#7B7B7B" />
                                 {btn.isProfile && <View style={styles.redDot} />}
                             </View>
                             <Text style={styles.actionLabel}>{btn.label}</Text>
-                        </View>
+                        </TouchableOpacity>
                     ))}
                 </View>
             </View>
