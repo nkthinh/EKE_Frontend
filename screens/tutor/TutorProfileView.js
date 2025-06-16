@@ -23,22 +23,26 @@ const TutorProfileViewTabs = ({ navigation }) => {
     }, []);
 
     const handleChange = (key, value) => {
+        if (!editing) return;
         setForm({ ...form, [key]: value });
     };
 
     const handleSubjectChange = (index, key, value) => {
+        if (!editing) return;
         const updated = [...form.subjects];
         updated[index][key] = value;
         setForm({ ...form, subjects: updated });
     };
 
     const handleAddSubject = () => {
+        if (!editing) return;
         const updated = [...(form.subjects || [])];
         updated.push({ subject: '', level: '', fee: '' });
         setForm({ ...form, subjects: updated });
     };
 
     const handleRemoveSubject = (index) => {
+        if (!editing) return;
         const updated = [...form.subjects];
         updated.splice(index, 1);
         setForm({ ...form, subjects: updated });
@@ -82,6 +86,8 @@ const TutorProfileViewTabs = ({ navigation }) => {
 
     const handleSave = async () => {
         await AsyncStorage.setItem('tutorProfile', JSON.stringify(form));
+        await AsyncStorage.setItem('tutorName', form.name || 'Gia Sư');
+
         alert('Đã lưu hồ sơ!');
         setEditing(false);
     };
@@ -123,30 +129,99 @@ const TutorProfileViewTabs = ({ navigation }) => {
                         </TouchableOpacity>
 
                         <Text style={styles.label}>Họ và Tên</Text>
-                        <TextInput style={styles.input} value={form.name} onChangeText={t => handleChange('name', t)} placeholder="Họ và Tên" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.name}
+                            onChangeText={t => handleChange('name', t)}
+                            editable={editing}
+                            placeholder="Họ và Tên"
+                        />
+
                         <Text style={styles.label}>Giới tính</Text>
-                        <TextInput style={styles.input} value={form.gender} onChangeText={t => handleChange('gender', t)} placeholder="Giới tính" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.gender}
+                            onChangeText={t => handleChange('gender', t)}
+                            editable={editing}
+                            placeholder="Giới tính"
+                        />
+
                         <Text style={styles.label}>Ngày sinh</Text>
-                        <TextInput style={styles.input} value={form.dob} onChangeText={t => handleChange('dob', t)} placeholder="Ngày sinh" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.dob}
+                            onChangeText={t => handleChange('dob', t)}
+                            editable={editing}
+                            placeholder="Ngày sinh"
+                        />
+
                         <Text style={styles.label}>Email</Text>
-                        <TextInput style={styles.input} value={form.email} onChangeText={t => handleChange('email', t)} placeholder="Email" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.email}
+                            onChangeText={t => handleChange('email', t)}
+                            editable={editing}
+                            placeholder="Email"
+                        />
+
                         <Text style={styles.label}>Số điện thoại</Text>
-                        <TextInput style={styles.input} value={form.phone} onChangeText={t => handleChange('phone', t)} placeholder="Số điện thoại" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.phone}
+                            onChangeText={t => handleChange('phone', t)}
+                            editable={editing}
+                            placeholder="Số điện thoại"
+                        />
+
                         <Text style={styles.label}>Tỉnh/Thành Phố</Text>
-                        <TextInput style={styles.input} value={form.city} onChangeText={t => handleChange('city', t)} placeholder="Tỉnh/Thành Phố" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.city}
+                            onChangeText={t => handleChange('city', t)}
+                            editable={editing}
+                            placeholder="Tỉnh/Thành Phố"
+                        />
                     </>
                 )}
 
                 {activeTab === 'Chuyên Môn' && (
                     <>
                         <Text style={styles.label}>Chức danh</Text>
-                        <TextInput style={styles.input} value={form.title} onChangeText={t => handleChange('title', t)} placeholder="Chức danh" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.title}
+                            onChangeText={t => handleChange('title', t)}
+                            editable={editing}
+                            placeholder="Chức danh"
+                        />
+
                         <Text style={styles.label}>Đơn vị học tập/ Công tác</Text>
-                        <TextInput style={styles.input} value={form.organization} onChangeText={t => handleChange('organization', t)} placeholder="Đơn vị học tập/ Công tác" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.organization}
+                            onChangeText={t => handleChange('organization', t)}
+                            editable={editing}
+                            placeholder="Đơn vị học tập/ Công tác"
+                        />
+
                         <Text style={styles.label}>Chuyên ngành</Text>
-                        <TextInput style={styles.input} value={form.major} onChangeText={t => handleChange('major', t)} placeholder="Chuyên ngành" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.major}
+                            onChangeText={t => handleChange('major', t)}
+                            editable={editing}
+                            placeholder="Chuyên ngành"
+                        />
+
                         <Text style={styles.label}>Hình thức dạy</Text>
-                        <TextInput style={styles.input} value={form.teachingMethod} onChangeText={t => handleChange('teachingMethod', t)} placeholder="Hình thức dạy" />
+                        <TextInput
+                            style={styles.input}
+                            value={form.teachingMethod}
+                            onChangeText={t => handleChange('teachingMethod', t)}
+                            editable={editing}
+                            placeholder="Hình thức dạy"
+                        />
+
                         <Text style={styles.label}>Chứng chỉ</Text>
                         <TouchableOpacity onPress={pickCertificate}>
                             <Image source={form.certificate ? { uri: form.certificate } : require('../../assets/cer.png')} style={styles.certificate} />
@@ -162,6 +237,7 @@ const TutorProfileViewTabs = ({ navigation }) => {
                             multiline
                             value={form.description}
                             onChangeText={t => handleChange('description', t)}
+                            editable={editing}
                             placeholder="Tự giới thiệu"
                         />
 
@@ -169,21 +245,29 @@ const TutorProfileViewTabs = ({ navigation }) => {
                         {(form.subjects || []).map((item, index) => (
                             <View key={index} style={styles.subjectBox}>
                                 <Text style={styles.subjectTitle}>Môn {index + 1}</Text>
+
                                 <Text style={styles.label}>Môn học</Text>
-                                <TextInput style={styles.input} value={item.subject} onChangeText={t => handleSubjectChange(index, 'subject', t)} placeholder="Môn học" />
+                                <TextInput style={styles.input} value={item.subject} onChangeText={t => handleSubjectChange(index, 'subject', t)} editable={editing} placeholder="Môn học" />
+
                                 <Text style={styles.label}>Lớp</Text>
-                                <TextInput style={styles.input} value={item.level} onChangeText={t => handleSubjectChange(index, 'level', t)} placeholder="Lớp" />
+                                <TextInput style={styles.input} value={item.level} onChangeText={t => handleSubjectChange(index, 'level', t)} editable={editing} placeholder="Lớp" />
+
                                 <Text style={styles.label}>Học phí / buổi</Text>
-                                <TextInput style={styles.input} value={item.fee} keyboardType="numeric" onChangeText={t => handleSubjectChange(index, 'fee', t)} placeholder="Học phí / buổi" />
-                                <TouchableOpacity onPress={() => handleRemoveSubject(index)}>
-                                    <Text style={styles.deleteText}>🗑 Xoá</Text>
-                                </TouchableOpacity>
+                                <TextInput style={styles.input} value={item.fee} keyboardType="numeric" onChangeText={t => handleSubjectChange(index, 'fee', t)} editable={editing} placeholder="Học phí / buổi" />
+
+                                {editing && (
+                                    <TouchableOpacity onPress={() => handleRemoveSubject(index)}>
+                                        <Text style={styles.deleteText}>🗑 Xoá</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         ))}
 
-                        <TouchableOpacity onPress={handleAddSubject} style={styles.addBtn}>
-                            <Text style={styles.addText}>+ Thêm môn học</Text>
-                        </TouchableOpacity>
+                        {editing && (
+                            <TouchableOpacity onPress={handleAddSubject} style={styles.addBtn}>
+                                <Text style={styles.addText}>+ Thêm môn học</Text>
+                            </TouchableOpacity>
+                        )}
                     </>
                 )}
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -8,6 +8,7 @@ import {
     Image,
     Dimensions,
     Modal,
+    Alert,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');
@@ -22,20 +23,74 @@ const TutorSignupScreen = ({ navigation }) => {
         confirmPassword: '',
     });
 
+    const [errors, setErrors] = useState({});
     const [modalVisible, setModalVisible] = useState(false);
 
     const handleChange = (key, value) => {
         setForm({ ...form, [key]: value });
+        setErrors((prev) => ({ ...prev, [key]: null })); // clear error when editing
+    };
+
+    const validate = () => {
+        const newErrors = {};
+
+        if (!form.name.trim()) newErrors.name = 'Họ tên là bắt buộc';
+        if (!form.email.trim()) {
+            newErrors.email = 'Email là bắt buộc';
+        } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
+            newErrors.email = 'Email không hợp lệ';
+        }
+
+        if (!form.phone.trim()) {
+            newErrors.phone = 'Số điện thoại là bắt buộc';
+        } else if (!/^\d{9,11}$/.test(form.phone)) {
+            newErrors.phone = 'Số điện thoại không hợp lệ';
+        }
+
+        if (!form.dob.trim()) newErrors.dob = 'Ngày sinh là bắt buộc';
+        if (!form.password.trim()) {
+            newErrors.password = 'Mật khẩu là bắt buộc';
+        } else if (form.password.length < 6) {
+            newErrors.password = 'Mật khẩu phải từ 6 ký tự';
+        }
+
+        if (!form.confirmPassword.trim()) {
+            newErrors.confirmPassword = 'Vui lòng nhập lại mật khẩu';
+        } else if (form.confirmPassword !== form.password) {
+            newErrors.confirmPassword = 'Mật khẩu không khớp';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
     };
 
     const handleRegister = () => {
+        if (!validate()) return;
 
         setModalVisible(true);
         setTimeout(() => {
             setModalVisible(false);
             navigation.navigate('RoleSelection');
-        }, 2000); // 2 giây
+        }, 2000);
     };
+
+    const renderInput = (label, key, placeholder, keyboardType = 'default', secure = false) => (
+        <>
+            <Text style={styles.label}>{label}</Text>
+            <TextInput
+                placeholder={placeholder}
+                style={[
+                    styles.input,
+                    errors[key] && { borderColor: 'red' },
+                ]}
+                keyboardType={keyboardType}
+                secureTextEntry={secure}
+                value={form[key]}
+                onChangeText={(text) => handleChange(key, text)}
+            />
+            {errors[key] && <Text style={styles.error}>{errors[key]}</Text>}
+        </>
+    );
 
     return (
         <View style={styles.container}>
@@ -43,61 +98,12 @@ const TutorSignupScreen = ({ navigation }) => {
             <Text style={styles.title}>Đăng Ký</Text>
 
             <View style={styles.inputContainer}>
-                <Text style={styles.label}>Họ Và Tên</Text>
-                <TextInput
-                    placeholder="John Doe"
-                    style={styles.input}
-                    value={form.name}
-                    onChangeText={(text) => handleChange('name', text)}
-                />
-
-                <Text style={styles.label}>Email</Text>
-                <TextInput
-                    placeholder="example@example.com"
-                    keyboardType="email-address"
-                    style={styles.input}
-                    value={form.email}
-                    onChangeText={(text) => handleChange('email', text)}
-                />
-
-                <Text style={styles.label}>Số Điện Thoại</Text>
-                <TextInput
-                    placeholder="+ 123 456 789"
-                    keyboardType="phone-pad"
-                    style={styles.input}
-                    value={form.phone}
-                    onChangeText={(text) => handleChange('phone', text)}
-                />
-
-                <Text style={styles.label}>Năm Sinh</Text>
-                <TextInput
-                    placeholder="DD / MM / YYYY"
-                    style={styles.input}
-                    value={form.dob}
-                    onChangeText={(text) => handleChange('dob', text)}
-                />
-
-                <Text style={styles.label}>Mật Khẩu</Text>
-                <View style={styles.passwordWrapper}>
-                    <TextInput
-                        secureTextEntry
-                        style={styles.input}
-                        value={form.password}
-                        onChangeText={(text) => handleChange('password', text)}
-                    />
-                    <Text style={styles.eyeIcon}>👁</Text>
-                </View>
-
-                <Text style={styles.label}>Nhập Lại Mật Khẩu</Text>
-                <View style={styles.passwordWrapper}>
-                    <TextInput
-                        secureTextEntry
-                        style={styles.input}
-                        value={form.confirmPassword}
-                        onChangeText={(text) => handleChange('confirmPassword', text)}
-                    />
-                    <Text style={styles.eyeIcon}>👁</Text>
-                </View>
+                {renderInput('Họ Và Tên', 'name', 'Nguyễn Văn A')}
+                {renderInput('Email', 'email', 'example@email.com', 'email-address')}
+                {renderInput('Số Điện Thoại', 'phone', '0123456789', 'phone-pad')}
+                {renderInput('Năm Sinh', 'dob', 'DD/MM/YYYY')}
+                {renderInput('Mật Khẩu', 'password', 'Mật khẩu', 'default', true)}
+                {renderInput('Nhập Lại Mật Khẩu', 'confirmPassword', 'Nhập lại mật khẩu', 'default', true)}
             </View>
 
             <Text style={styles.policy}>
@@ -166,16 +172,13 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         fontSize: 15,
         backgroundColor: '#fff',
-        marginBottom: 12,
+        marginBottom: 4,
     },
-    passwordWrapper: {
-        position: 'relative',
-    },
-    eyeIcon: {
-        position: 'absolute',
-        right: 16,
-        top: 12,
-        fontSize: 16,
+    error: {
+        color: 'red',
+        fontSize: 13,
+        marginBottom: 8,
+        paddingLeft: 10,
     },
     policy: {
         fontSize: 13,
@@ -203,7 +206,6 @@ const styles = StyleSheet.create({
         color: '#333',
         marginTop: 10,
     },
-    // Modal styles
     modalContainer: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.4)',

@@ -6,6 +6,9 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import BottomMenu from '../components/BottomMenu';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 const tutors = Array(9).fill({
     name: 'Nguyễn Thị Thảo',
@@ -21,6 +24,17 @@ const TutorHomeScreen = ({ navigation }) => {
     const [locationOpen, setLocationOpen] = useState(false);
     const [minAge, setMinAge] = useState(5);
     const [maxAge, setMaxAge] = useState(30);
+    const [userName, setUserName] = useState('Gia Sư');
+
+    useFocusEffect(
+        useCallback(() => {
+            const getName = async () => {
+                const storedName = await AsyncStorage.getItem('tutorName');
+                if (storedName) setUserName(storedName);
+            };
+            getName();
+        }, [])
+    );
 
     const renderItem = ({ item }) => (
         <TouchableOpacity onPress={() => navigation.navigate('ChatDetailScreen', { name: item.name })}>
@@ -47,7 +61,7 @@ const TutorHomeScreen = ({ navigation }) => {
                 <View style={styles.row}>
                     <View style={styles.leftGreeting}>
                         <Text style={styles.greeting}>Xin Chào,</Text>
-                        <Text style={styles.username}>Thao</Text>
+                        <Text style={styles.username}>{userName}</Text>
                     </View>
                     <View style={styles.rightIcons}>
 
