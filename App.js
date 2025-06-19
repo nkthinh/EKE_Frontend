@@ -23,6 +23,7 @@ import FeedbackScreen from "./screens/StudentScreens/FeedbackScreen";
 import ProfileScreen from "./screens/StudentScreens/ProfileScreen";
 import PackageScreen from "./screens/StudentScreens/PackageScreen";
 import UpdateProfile from "./screens/StudentScreens/UpdateProfile";
+import WalletScreen from "./screens/StudentScreens/WalletScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -118,6 +119,11 @@ function App() {
         <Stack.Screen
           name="UpdateProfile"
           component={UpdateProfile}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WalletScreen"
+          component={WalletScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
