@@ -19,7 +19,7 @@ const ProfileScreen = ({ navigation }) => {
             <Icon name="log-out-outline" size={20} color="#000" />
             <Text style={styles.buttonText}>Đăng Xuất</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.button}>
+          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("WalletScreen")}>
             <Icon name="wallet-outline" size={20} color="#000" />
             <Text style={styles.buttonText}>Ví Tiền</Text>
           </TouchableOpacity>
