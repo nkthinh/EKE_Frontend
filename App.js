@@ -20,6 +20,11 @@ import MessageScreen from "./screens/StudentScreens/MessageScreen";
 import DetailMessageScreen from "./screens/StudentScreens/DetailMessageScreen";
 import LecturerFeedbackScreen from "./screens/StudentScreens/LecturerFeedbackScreen";
 import FeedbackScreen from "./screens/StudentScreens/FeedbackScreen";
+import ProfileScreen from "./screens/StudentScreens/ProfileScreen";
+import PackageScreen from "./screens/StudentScreens/PackageScreen";
+import UpdateProfile from "./screens/StudentScreens/UpdateProfile";
+import WalletScreen from "./screens/StudentScreens/WalletScreen";
+import DepositScreen from "./screens/StudentScreens/DepositScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -100,6 +105,31 @@ function App() {
          <Stack.Screen
           name="FeedbackScreen"
           component={FeedbackScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="ProfileScreen"
+          component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="PackageScreen"
+          component={PackageScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="UpdateProfile"
+          component={UpdateProfile}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="WalletScreen"
+          component={WalletScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DepositScreen"
+          component={DepositScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
