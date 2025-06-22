@@ -1,17 +1,111 @@
-import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity, Dimensions } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import StudentLayout from "../../layout/StudentLayout";
+import { PanGestureHandler, GestureHandlerRootView } from "react-native-gesture-handler";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  useAnimatedGestureHandler,
+  withTiming,
+  Easing,
+  runOnJS,
+} from "react-native-reanimated";
+
+const { width } = Dimensions.get("window");
+
+const dummyData = [
+  {
+    id: 1,
+    image: require("../../assets/girl.jpg"),
+    name: "Nguyen Thi Thao, 22",
+    university: "Đại học Sư phạm HCM",
+    address: "13/28 Nguyen Hue, Tan Binh, Tp HCM",
+    skills: [
+      { text: "Tieng Anh", color: "#AFB7FF" },
+      { text: "Cap 1", color: "#FFCC80" },
+      { text: "Cap 2", color: "#FFCC80" },
+      { text: "IELTS 6.5", color: "#FF4B4A" },
+    ],
+  },
+  {
+    id: 2,
+    image: require("../../assets/girl2.jpg"),
+    name: "Tran Minh Anh, 20",
+    university: "Đại học Kinh tế HCM",
+    address: "45 Le Loi, Quan 1, Tp HCM",
+    skills: [
+      { text: "Toan Cao Cap", color: "#FFB7FF" },
+      { text: "Tieng Nhat", color: "#80CCFF" },
+      { text: "Python", color: "#FF8080" },
+    ],
+  },
+  {
+    id: 3,
+    image: require("../../assets/girl3.png"),
+    name: "Le Hoang Mai, 21",
+    university: "Đại học Bách Khoa HCM",
+    address: "72 Tran Hung Dao, Quan 5, Tp HCM",
+    skills: [
+      { text: "C++", color: "#B7FFB7" },
+      { text: "Java", color: "#FFFF80" },
+      { text: "Data Science", color: "#CC80FF" },
+      { text: "TOEIC 800", color: "#FF4B4A" },
+    ],
+  },
+];
 
 const HomeScreen = ({ navigation }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const translateX = useSharedValue(0);
+  const isSwiping = useSharedValue(false);
+
+  const updateIndex = (newIndex) => {
+    setCurrentIndex(newIndex);
+  };
+
+  const gestureHandler = useAnimatedGestureHandler({
+    onStart: (_, ctx) => {
+      ctx.startX = translateX.value;
+      isSwiping.value = true;
+    },
+    onActive: (event, ctx) => {
+      translateX.value = ctx.startX + event.translationX;
+    },
+    onEnd: (event) => {
+      isSwiping.value = false;
+      let newIndex = currentIndex;
+
+      if (event.velocityX > 500 || (event.velocityX > 0 && translateX.value > width / 4)) {
+        translateX.value = withTiming(width, { duration: 300, easing: Easing.ease }, () => {
+          translateX.value = 0;
+          runOnJS(updateIndex)((currentIndex - 1 + dummyData.length) % dummyData.length);
+        });
+      } else if (event.velocityX < -500 || (event.velocityX < 0 && translateX.value < -width / 4)) {
+        translateX.value = withTiming(-width, { duration: 300, easing: Easing.ease }, () => {
+          translateX.value = 0;
+          runOnJS(updateIndex)((currentIndex + 1) % dummyData.length);
+        });
+      } else {
+        translateX.value = withTiming(0, { duration: 300, easing: Easing.ease });
+      }
+    },
+  });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: translateX.value }],
+      opacity: isSwiping.value ? 0.8 : 1,
+    };
+  });
+
+  const currentProfile = dummyData[currentIndex];
+
   return (
     <StudentLayout navigation={navigation}>
-      <View style={styles.container}>
+      <GestureHandlerRootView style={styles.container}>
         <View style={styles.logoHeader}>
-          <Image
-            source={require("../../assets/logo.png")}
-            style={styles.logo}
-          />
+          <Image source={require("../../assets/logo.png")} style={styles.logo} />
         </View>
         <View style={styles.header}>
           <View style={styles.headerText}>
@@ -29,37 +123,33 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={styles.imageContainer}>
-          <Image
-            source={require("../../assets/girl.jpg")}
-            style={styles.profileImage}
-          />
-          <View style={styles.overlay}>
-            <View style={styles.userInfo}>
-              <Text style={styles.name}>Nguyen Thi Thao, 22</Text>
-              <Text style={styles.location}>
-                © Đại học Sư phạm HCM
-              </Text>
-              <Text style={styles.location}>
-                © 13/28 Nguyen Hue, Tan Binh, Tp HCM
-              </Text>
+        <PanGestureHandler onGestureEvent={gestureHandler}>
+          <Animated.View style={[styles.imageContainer, animatedStyle]}>
+            <Image
+              source={currentProfile.image}
+              style={styles.profileImage}
+              defaultSource={require("../../assets/girl.jpg")} // Fallback image
+              onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+            />
+            <View style={styles.overlay}>
+              <View style={styles.userInfo}>
+                <Text style={styles.name}>{currentProfile.name}</Text>
+                <Text style={styles.location}>© {currentProfile.university}</Text>
+                <Text style={styles.location}>© {currentProfile.address}</Text>
+              </View>
+              <View style={styles.skillsContainer}>
+                {currentProfile.skills.map((skill, index) => (
+                  <TouchableOpacity
+                    key={`${currentProfile.id}-${index}`}
+                    style={[styles.skillButton, { backgroundColor: skill.color }]}
+                  >
+                    <Text style={styles.skillText}>{skill.text}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
-            <View style={styles.skillsContainer}>
-              <TouchableOpacity style={[styles.skillButton, { backgroundColor: "#AFB7FF" }]}>
-                <Text style={styles.skillText}>Tieng Anh</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.skillButton, { backgroundColor: "#FFCC80" }]}>
-                <Text style={styles.skillText}>Cap 1</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.skillButton, { backgroundColor: "#FFCC80" }]}>
-                <Text style={styles.skillText}>Cap 2</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.skillButton, { backgroundColor: "#FF4B4A" }]}>
-                <Text style={styles.skillText}>IELTS 6.5</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+          </Animated.View>
+        </PanGestureHandler>
 
         <View style={styles.actionButtons}>
           <TouchableOpacity style={styles.actionButton}>
@@ -78,7 +168,7 @@ const HomeScreen = ({ navigation }) => {
             <Icon name="flash" size={30} color="#cc00cc" />
           </TouchableOpacity>
         </View>
-      </View>
+      </GestureHandlerRootView>
     </StudentLayout>
   );
 };

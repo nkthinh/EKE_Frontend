@@ -24,6 +24,7 @@ import ProfileScreen from "./screens/StudentScreens/ProfileScreen";
 import PackageScreen from "./screens/StudentScreens/PackageScreen";
 import UpdateProfile from "./screens/StudentScreens/UpdateProfile";
 import WalletScreen from "./screens/StudentScreens/WalletScreen";
+import DepositScreen from "./screens/StudentScreens/DepositScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -124,6 +125,11 @@ function App() {
         <Stack.Screen
           name="WalletScreen"
           component={WalletScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="DepositScreen"
+          component={DepositScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen
