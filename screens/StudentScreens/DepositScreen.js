@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     marginLeft: 10,
     textAlign: "left",
-    fontSize:16
+    fontSize:16,
   },
   card: {
     backgroundColor: "white",
