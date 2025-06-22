@@ -10,28 +10,46 @@ const ProfileScreen = ({ navigation }) => {
         <Image source={require("../../assets/logo.png")} style={styles.logo} />
         <Text style={styles.title}>Phụ Huynh/ Học Sinh</Text>
         <View style={styles.profileContainer}>
-          <Image source={require("../../assets/girl.jpg")} style={styles.profileImage} />
+          <Image
+            source={require("../../assets/girl.jpg")}
+            style={styles.profileImage}
+          />
           <View style={styles.progressBar} />
         </View>
         <Text style={styles.id}>ID: 1234567</Text>
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.button}>
-            <Icon name="log-out-outline" size={20} color="#000" />
+          <View style={styles.buttonWrapper}>
+            <TouchableOpacity style={[styles.iconButton, styles.shadow]}>
+              <Icon name="log-out-outline" size={20} color="#000" />
+            </TouchableOpacity>
             <Text style={styles.buttonText}>Đăng Xuất</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("WalletScreen")}>
-            <Icon name="wallet-outline" size={20} color="#000" />
+          </View>
+          <View style={styles.buttonWrapper}>
+            <TouchableOpacity
+              style={[styles.iconButton, styles.shadow]}
+              onPress={() => navigation.navigate("WalletScreen")}
+            >
+              <Icon name="wallet-outline" size={20} color="#000" />
+            </TouchableOpacity>
             <Text style={styles.buttonText}>Ví Tiền</Text>
-          </TouchableOpacity>
+          </View>
         </View>
-        <TouchableOpacity style={styles.centerButton} onPress={() => navigation.navigate("UpdateProfile")}>
-          <Icon name="person-outline" size={20} color="#000" />
+        <View style={styles.centerButtonWrapper}>
+          <TouchableOpacity
+            style={[styles.iconButton, styles.shadow]}
+            onPress={() => navigation.navigate("UpdateProfile")}
+          >
+            <Icon name="person-outline" size={20} color="#000" />
+          </TouchableOpacity>
           <Text style={styles.buttonText}>Hồ Sơ</Text>
-        </TouchableOpacity>
+        </View>
         <View style={styles.platinumSection}>
           <Text style={styles.platinumText}>EKE Platinum</Text>
           <Text style={styles.upgradeText}>Nâng cấp tài khoản</Text>
-          <TouchableOpacity style={styles.registerButton} onPress={() => navigation.navigate("PackageScreen")}>
+          <TouchableOpacity
+            style={[styles.registerButton, styles.shadow]}
+            onPress={() => navigation.navigate("PackageScreen")}
+          >
             <Text style={styles.registerButtonText}>Đăng Ký</Text>
           </TouchableOpacity>
         </View>
@@ -50,22 +68,22 @@ const styles = StyleSheet.create({
   logo: {
     width: 70,
     height: 70,
-    marginTop: 50,
+    marginTop: 20,
   },
   title: {
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 20,
-    color:"#31B7EC"
+    color: "#31B7EC",
   },
   profileContainer: {
     position: "relative",
     marginBottom: 10,
   },
   profileImage: {
-    width: 150,
-    height: 150,
-    borderRadius: 70,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
   },
   progressBar: {
     position: "absolute",
@@ -73,7 +91,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    borderRadius: 70,
+    borderRadius: 100,
     borderWidth: 5,
     borderColor: "#00f",
     opacity: 0.2,
@@ -84,26 +102,35 @@ const styles = StyleSheet.create({
   },
   buttonRow: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    width: "60%",
-    marginBottom: 10,
+    justifyContent: "space-between",
+    width: "70%",
   },
-  button: {
+  buttonWrapper: {
     alignItems: "center",
   },
-  centerButton: {
+  centerButtonWrapper: {
     alignItems: "center",
     marginBottom: 20,
   },
+  iconButton: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: "white",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 5,
+  },
   buttonText: {
     fontSize: 14,
-    marginTop: 5,
+    textAlign: "center",
+    color: "#000",
   },
   platinumSection: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#F5F7FA",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20,
+    padding: 40,
     alignItems: "center",
     width: "100%",
     position: "absolute",
@@ -120,14 +147,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   registerButton: {
-    backgroundColor: "#00f",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
+    backgroundColor: "#FCFCFE",
+    paddingVertical: 20,
+    paddingHorizontal: 70,
+    borderRadius: 30,
   },
   registerButtonText: {
-    color: "white",
     fontSize: 16,
+  },
+  shadow: {
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
   },
 });
 
