@@ -12,7 +12,6 @@
     "@ptomasroos/react-native-multi-slider": "^2.2.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/checkbox": "^0.5.20",
-    "@react-native-community/datetimepicker": "^8.4.0",
     "@react-native-community/slider": "^4.5.7",
     "@react-native-picker/picker": "^2.11.0",
     "@react-navigation/native": "^6.1.18",
@@ -26,7 +25,9 @@
     "react-native-reanimated": "^3.18.0",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "~4.10.0",
-    "react-native-vector-icons": "^10.2.0"
+    "react-native-vector-icons": "^10.2.0",
+    "react-native-webview": "13.13.5",
+    "@react-native-community/datetimepicker": "8.3.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

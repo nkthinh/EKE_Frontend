@@ -45,7 +45,10 @@ const TutorRegisterScreen = ({ navigation }) => {
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => navigation.navigate('TutorHome')}
+            >
                 <Text style={styles.buttonText}>Đăng Nhập</Text>
             </TouchableOpacity>
 
