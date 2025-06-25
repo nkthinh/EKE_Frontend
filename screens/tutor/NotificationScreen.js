@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -7,18 +7,27 @@ import {
     TouchableOpacity
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import BottomMenu from '../components/BottomMenu';
 
-const notifications = [
-    { title: 'Lịch Học Đã Được Cập Nhật', time: 'June 10 - 10:00 AM', icon: 'star', color: '#FF5E5E', section: 'Hôm nay' },
-    { title: 'Đừng Quên Lịch Học Sáng Nay', time: 'June 10 - 8:00 AM', icon: 'lightbulb-on', color: '#A9E34B', section: 'Hôm nay' },
-    { title: 'Đã Hoàn Thành Buổi Học', time: 'June 09 - 6:00 PM', icon: 'trophy', color: '#D8F561', section: 'Hôm qua' },
-    { title: 'Đừng Quên Lịch Học Tối Nay', time: 'June 09 - 3:00 PM', icon: 'clock-outline', color: '#FFA726', section: 'Hôm qua' },
-    { title: 'Bài Tập Đã Được Cập Nhật', time: 'June 09 - 11:00 AM', icon: 'file-document', color: '#448AFF', section: 'Hôm qua' },
-    { title: 'Lớp Học Mới Đã Bắt Đầu', time: 'May 29 - 9:00 AM', icon: 'star-circle', color: '#00C853', section: 'May 29 - 20XX' },
-];
-
 const NotificationScreen = ({ navigation }) => {
+    const [notifications, setNotifications] = useState([]);
+
+    useEffect(() => {
+        const fetchNoti = async () => {
+            try {
+                const data = await AsyncStorage.getItem('notifications');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    setNotifications(parsed);
+                }
+            } catch (e) {
+                console.warn('Lỗi đọc notifications:', e);
+            }
+        };
+        fetchNoti();
+    }, []);
+
     const grouped = notifications.reduce((acc, item) => {
         if (!acc[item.section]) acc[item.section] = [];
         acc[item.section].push(item);
@@ -38,16 +47,25 @@ const NotificationScreen = ({ navigation }) => {
             <ScrollView contentContainerStyle={styles.container}>
                 <Text style={styles.header}>🔔 Thông Báo</Text>
 
+                {Object.keys(grouped).length === 0 && (
+                    <Text style={{ textAlign: 'center', marginTop: 40, color: '#999' }}>
+                        Không có thông báo nào.
+                    </Text>
+                )}
+
                 {Object.keys(grouped).map((section) => (
                     <View key={section}>
                         <Text style={styles.section}>{section}</Text>
                         {grouped[section].map((n, index) => (
                             <View key={index} style={styles.card}>
-                                <View style={[styles.iconWrapper, { backgroundColor: n.color }]}>
-                                    <Icon name={n.icon} size={30} color="#fff" />
+                                <View style={[styles.iconWrapper, { backgroundColor: n.color || '#2196F3' }]}>
+                                    <Icon name={n.icon || 'bell'} size={30} color="#fff" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.title}>{n.title}</Text>
+                                    {n.student && (
+                                        <Text style={styles.studentName}>👤 Học viên: {n.student}</Text>
+                                    )}
                                     <Text style={styles.time}>{n.time}</Text>
                                 </View>
                             </View>
@@ -123,6 +141,12 @@ const styles = StyleSheet.create({
         color: '#888',
         marginTop: 4,
     },
+    studentName: {
+        fontSize: 14,
+        color: '#555',
+        marginTop: 4,
+    }
+
 });
 
 export default NotificationScreen;
