@@ -74,6 +74,14 @@ const AdminProfile = ({ navigation }) => {
                 <TouchableOpacity style={styles.saveButton}>
                     <Text style={styles.saveButtonText}>Lưu</Text>
                 </TouchableOpacity>
+
+                {/* Logout button */}
+                <TouchableOpacity
+                    style={styles.logoutButton}
+                    onPress={() => navigation.navigate('TutorRegisterScreen')}
+                >
+                    <Text style={styles.logoutText}>Đăng xuất</Text>
+                </TouchableOpacity>
             </ScrollView>
 
             <BottomMenuAdmin navigation={navigation} />
@@ -148,6 +156,19 @@ const styles = StyleSheet.create({
     saveButtonText: {
         color: '#fff',
         fontSize: 18,
+        fontWeight: 'bold',
+    },
+    logoutButton: {
+        borderWidth: 1,
+        borderColor: '#F44336',
+        paddingVertical: 14,
+        borderRadius: 25,
+        alignItems: 'center',
+        marginTop: 16,
+    },
+    logoutText: {
+        color: '#F44336',
+        fontSize: 16,
         fontWeight: 'bold',
     },
 });
