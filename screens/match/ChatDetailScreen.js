@@ -17,6 +17,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+
 const ChatDetailScreen = ({ route, navigation }) => {
     const { name } = route.params;
 
@@ -47,9 +48,20 @@ const ChatDetailScreen = ({ route, navigation }) => {
     };
 
     const startVideoCall = () => {
-        const roomName = name.replace(/\s+/g, '') + '_room';
-        navigation.navigate('VideoCall', { roomName });
+        setMessages(prev => [
+            ...prev,
+            {
+                id: Date.now(),
+                from: 'me',
+                text: '📹 Đã tham gia cuộc gọi Google Meet',
+                type: 'call'
+            }
+        ]);
+
+        navigation.navigate('VideoCall');
     };
+
+
 
     const handleSchedulePress = () => {
         setEditingMessageId(null);

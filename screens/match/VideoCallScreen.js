@@ -1,19 +1,26 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import { WebView } from 'react-native-webview';
 
-const VideoCallScreen = ({ route }) => {
-    const { roomName } = route.params;
-    const jitsiURL = `https://meet.jit.si/${roomName}`;
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, Linking, Alert } from 'react-native';
+
+const VideoCallScreen = () => {
+    const meetLink = 'https://meet.google.com/svk-ubxs-itf';
+
+    useEffect(() => {
+        const openMeet = async () => {
+            const supported = await Linking.canOpenURL(meetLink);
+            if (supported) {
+                await Linking.openURL(meetLink);
+            } else {
+                Alert.alert('Không thể mở cuộc gọi', 'Thiết bị không hỗ trợ mở Google Meet.');
+            }
+        };
+
+        openMeet();
+    }, []);
 
     return (
         <View style={styles.container}>
-            <WebView
-                source={{ uri: jitsiURL }}
-                style={{ flex: 1 }}
-                javaScriptEnabled
-                allowsFullscreenVideo
-            />
+            <Text style={styles.text}>🔗 Đang mở phòng họp Google Meet...</Text>
         </View>
     );
 };
@@ -21,7 +28,13 @@ const VideoCallScreen = ({ route }) => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
+    text: {
+        fontSize: 16,
+        color: '#444'
+    }
 });
 
 export default VideoCallScreen;

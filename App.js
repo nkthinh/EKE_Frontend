@@ -26,6 +26,7 @@ import CompleteProfileScreen from './screens/customer/CompleteProfileScreen';
 
 import ChatListScreen from './screens/match/ChatListScreen';
 import ChatDetailScreen from './screens/match/ChatDetailScreen';
+import VideoCallScreen from './screens/match/VideoCallScreen';
 
 import AdminHomeScreen from './screens/admin/AdminHomeScreen';
 import AdminPackageScreen from './screens/admin/AdminPackageScreen';
@@ -69,6 +70,7 @@ export default function App() {
         {/* Chat */}
         <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
         <Stack.Screen name="ChatDetailScreen" component={ChatDetailScreen} />
+        <Stack.Screen name="VideoCall" component={VideoCallScreen} />
 
         {/* Admin */}
         <Stack.Screen name="AdminHome" component={AdminHomeScreen} />
