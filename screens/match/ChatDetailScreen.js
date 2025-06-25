@@ -14,6 +14,8 @@ import {
     Modal,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ChatDetailScreen = ({ route, navigation }) => {
     const { name } = route.params;
@@ -57,9 +59,23 @@ const ChatDetailScreen = ({ route, navigation }) => {
         setShowScheduleModal(true);
     };
 
-    const confirmSchedule = () => {
+    const confirmSchedule = async () => {
         if (!scheduleTitle.trim() || !scheduleDate.trim() || !scheduleTime.trim()) {
             Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ tiêu đề, ngày và thời gian.');
+            return;
+        }
+
+        const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+        const timeRegex = /^\d{2}:\d{2}$/;
+
+
+        if (!dateRegex.test(scheduleDate)) {
+            Alert.alert('Lỗi', 'Ngày không đúng định dạng dd/mm/yyyy');
+            return;
+        }
+
+        if (!timeRegex.test(scheduleTime)) {
+            Alert.alert('Lỗi', 'Giờ không đúng định dạng HH:mm');
             return;
         }
 
@@ -72,13 +88,29 @@ const ChatDetailScreen = ({ route, navigation }) => {
             type: 'schedule',
         };
 
-        setMessages(prev => {
-            if (editingMessageId) {
-                return prev.map(msg => msg.id === editingMessageId ? newMessage : msg);
-            } else {
-                return [...prev, newMessage];
-            }
-        });
+        setMessages(prev =>
+            editingMessageId
+                ? prev.map(msg => msg.id === editingMessageId ? newMessage : msg)
+                : [...prev, newMessage]
+        );
+
+        const newNoti = {
+            title: `⏰ Nhắc lịch: ${scheduleTitle}`,
+            time: `${scheduleDate} - ${scheduleTime}`,
+            student: name,
+            icon: 'calendar',
+            color: '#4CAF50',
+            section: 'Sắp tới'
+        };
+
+        try {
+            const existing = await AsyncStorage.getItem('notifications');
+            const parsed = existing ? JSON.parse(existing) : [];
+            parsed.unshift(newNoti);
+            await AsyncStorage.setItem('notifications', JSON.stringify(parsed));
+        } catch (e) {
+            console.warn('Lỗi lưu notification:', e);
+        }
 
         setEditingMessageId(null);
         setScheduleTitle('');
@@ -86,6 +118,7 @@ const ChatDetailScreen = ({ route, navigation }) => {
         setScheduleTime('');
         setShowScheduleModal(false);
     };
+
 
     const showScheduleOptions = (id) => {
         Alert.alert('Lịch hẹn', 'Bạn muốn thực hiện gì?', [
@@ -171,6 +204,15 @@ const ChatDetailScreen = ({ route, navigation }) => {
                 >
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContent}>
+
+                            {/* Nút Đóng ❌ */}
+                            <TouchableOpacity
+                                onPress={() => setShowScheduleModal(false)}
+                                style={{ position: 'absolute', top: 10, right: 10 }}
+                            >
+                                <Icon name="close" size={24} color="#888" />
+                            </TouchableOpacity>
+
                             <Text style={styles.modalTitle}>Tạo lịch hẹn</Text>
 
                             <TextInput
@@ -195,16 +237,15 @@ const ChatDetailScreen = ({ route, navigation }) => {
                             />
 
                             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 16 }}>
-                                <TouchableOpacity onPress={() => setShowScheduleModal(false)} style={styles.cancelBtn}>
-                                    <Text>Hủy</Text>
-                                </TouchableOpacity>
                                 <TouchableOpacity onPress={confirmSchedule} style={styles.confirmBtn}>
                                     <Text style={{ color: '#fff' }}>{editingMessageId ? 'Lưu' : 'Tạo'}</Text>
                                 </TouchableOpacity>
                             </View>
+
                         </View>
                     </View>
                 </Modal>
+
 
             </KeyboardAvoidingView>
         </SafeAreaView>
@@ -329,6 +370,12 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 6,
     },
+    studentName: {
+        fontSize: 14,
+        color: '#555',
+        marginTop: 4,
+    },
+
 });
 
 export default ChatDetailScreen;

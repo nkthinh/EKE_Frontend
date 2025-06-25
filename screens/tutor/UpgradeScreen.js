@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-    View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions
+    View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const UpgradeScreen = ({ navigation }) => {
     const [selected, setSelected] = useState('Silver');
+    const [prices, setPrices] = useState({
+        Silver: '50000',
+        Gold: '90000',
+        Diamond: '130000',
+    });
+
+    useEffect(() => {
+        const loadPrices = async () => {
+            try {
+                const stored = await AsyncStorage.getItem('packagePrices');
+                if (stored) setPrices(JSON.parse(stored));
+            } catch (e) {
+                console.warn('Không thể tải giá gói:', e);
+            }
+        };
+        loadPrices();
+    }, []);
 
     const handleRegister = async () => {
         const today = new Date().toISOString();
@@ -22,10 +39,10 @@ const UpgradeScreen = ({ navigation }) => {
 
         try {
             await AsyncStorage.setItem('subscriptionPlan', JSON.stringify(plan));
-            alert(`Đăng ký gói ${selected} thành công!`);
+            Alert.alert('✅ Thành công', `Đăng ký gói ${selected} thành công!`);
             navigation.navigate('WalletScreen');
         } catch (error) {
-            alert('Lỗi khi lưu gói đăng ký.');
+            Alert.alert('❌ Lỗi', 'Không thể lưu gói đăng ký.');
         }
     };
 
@@ -36,35 +53,34 @@ const UpgradeScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             <ScrollView contentContainerStyle={styles.container}>
-                <Text style={styles.title}>Nâng Cấp Tài Khoản Platinum</Text>
-                <Text style={styles.subTitle}>Dành cho tài khoản Gia Sư</Text>
+                <Text style={styles.title}>Nâng Cấp Tài Khoản</Text>
+                <Text style={styles.subTitle}>Chọn gói đăng ký dành cho Gia Sư</Text>
 
-                {[
-                    { name: 'Silver', price: '50.000 đ' },
-                    { name: 'Gold', price: '90.000 đ' },
-                    { name: 'Diamond', price: '130.000 đ' },
-                ].map((item) => (
+                {['Silver', 'Gold', 'Diamond'].map((level) => (
                     <TouchableOpacity
-                        key={item.name}
-                        style={[styles.option, selected === item.name && styles.optionSelected]}
-                        onPress={() => setSelected(item.name)}
+                        key={level}
+                        style={[
+                            styles.option,
+                            selected === level && styles.optionSelected
+                        ]}
+                        onPress={() => setSelected(level)}
                     >
                         <View>
-                            <Text style={styles.optionTitle}>{item.name}</Text>
+                            <Text style={styles.optionTitle}>{level}</Text>
                             <Text style={styles.optionDesc}>Thanh toán hàng tháng</Text>
                         </View>
-                        <Text style={styles.price}>{item.price}</Text>
-                        <Icon name={selected === item.name ? 'check-circle' : 'check-circle-outline'}
+                        <Text style={styles.price}>{parseInt(prices[level]).toLocaleString()} đ</Text>
+                        <Icon
+                            name={selected === level ? 'check-circle' : 'check-circle-outline'}
                             size={30}
-                            color={selected === item.name ? '#3C90EF' : '#ccc'}
+                            color={selected === level ? '#3C90EF' : '#ccc'}
                         />
                     </TouchableOpacity>
                 ))}
 
-                <Text style={styles.featureHeader}>Các Tính Năng Mới</Text>
-
+                <Text style={styles.featureHeader}>Tính Năng Bao Gồm</Text>
                 {[
-                    'Tăng Giới Hạn Danh Sách Học Viên Có Thể Kết Nối',
+                    'Tăng Giới Hạn Danh Sách Học Viên',
                     'Sử Dụng Trợ Lý Học Tập AI',
                     'Không Hiển Thị Quảng Cáo',
                 ].map((text, i) => (

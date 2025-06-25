@@ -47,7 +47,18 @@ const TutorRegisterScreen = ({ navigation }) => {
 
             <TouchableOpacity
                 style={styles.button}
-                onPress={() => navigation.navigate('TutorHome')}
+                onPress={() => {
+                    const emailTrimmed = email.trim().toLowerCase();
+                    const passwordTrimmed = password.trim();
+
+                    if (emailTrimmed === 'admin' && passwordTrimmed === '123456') {
+                        navigation.navigate('AdminHome');
+                    } else if (emailTrimmed === 'nhi' && passwordTrimmed === '123456') {
+                        navigation.navigate('TutorHome');
+                    } else {
+                        Alert.alert('Lỗi', 'Sai tài khoản hoặc mật khẩu');
+                    }
+                }}
             >
                 <Text style={styles.buttonText}>Đăng Nhập</Text>
             </TouchableOpacity>
