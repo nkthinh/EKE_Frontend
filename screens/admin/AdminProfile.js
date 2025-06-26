@@ -10,6 +10,7 @@ import {
     SafeAreaView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { Tooltip } from 'react-native-paper';
 import BottomMenuAdmin from '../components/BottomMenuAdmin';
 import avatarImage from '../../assets/avatar.png';
 
@@ -18,11 +19,16 @@ const AdminProfile = ({ navigation }) => {
     const [password, setPassword] = useState('123456');
     const [phone, setPhone] = useState('+84987654321');
     const [city, setCity] = useState('Thành Phố Hồ Chí Minh');
+    const [tooltipVisible, setTooltipVisible] = useState(false);
+
+    const handleLogout = () => {
+        navigation.navigate('TutorRegister');
+    };
 
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.content}>
-                {/* Header */}
+                {/* Nút quay lại */}
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Icon name="arrow-left" size={28} color="#000" />
                 </TouchableOpacity>
@@ -37,14 +43,10 @@ const AdminProfile = ({ navigation }) => {
                     </TouchableOpacity>
                 </View>
 
-                {/* Inputs */}
+                {/* Form thông tin */}
                 <View style={styles.form}>
                     <Text style={styles.label}>Tài khoản</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={username}
-                        onChangeText={setUsername}
-                    />
+                    <TextInput style={styles.input} value={username} onChangeText={setUsername} />
 
                     <Text style={styles.label}>Mật khẩu</Text>
                     <TextInput
@@ -63,25 +65,32 @@ const AdminProfile = ({ navigation }) => {
                     />
 
                     <Text style={styles.label}>Tỉnh/Thành Phố</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={city}
-                        onChangeText={setCity}
-                    />
+                    <TextInput style={styles.input} value={city} onChangeText={setCity} />
                 </View>
 
-                {/* Save button */}
+
                 <TouchableOpacity style={styles.saveButton}>
                     <Text style={styles.saveButtonText}>Lưu</Text>
                 </TouchableOpacity>
 
-                {/* Logout button */}
-                <TouchableOpacity
-                    style={styles.logoutButton}
-                    onPress={() => navigation.navigate('TutorRegisterScreen')}
-                >
-                    <Text style={styles.logoutText}>Đăng xuất</Text>
-                </TouchableOpacity>
+
+                <View style={styles.logoutWrapper}>
+                    <Tooltip
+                        visible={tooltipVisible}
+                        onDismiss={() => setTooltipVisible(false)}
+                        title="Đăng xuất khỏi tài khoản"
+                        enterTouchDelay={300}
+                        contentStyle={{ backgroundColor: '#333' }}
+                    >
+                        <TouchableOpacity
+                            style={styles.logoutButtonCircle}
+                            onPress={handleLogout}
+                            onLongPress={() => setTooltipVisible(true)}
+                        >
+                            <Icon name="logout" size={24} color="#fff" />
+                        </TouchableOpacity>
+                    </Tooltip>
+                </View>
             </ScrollView>
 
             <BottomMenuAdmin navigation={navigation} />
@@ -93,11 +102,11 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#fff',
-        paddingTop: 50,
+        paddingTop: 40
     },
     content: {
         padding: 24,
-        paddingBottom: 100,
+        paddingBottom: 120,
     },
     backButton: {
         marginBottom: 12,
@@ -152,24 +161,26 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         alignItems: 'center',
         marginTop: 10,
+        marginBottom: 30,
     },
     saveButtonText: {
         color: '#fff',
         fontSize: 18,
         fontWeight: 'bold',
     },
-    logoutButton: {
-        borderWidth: 1,
-        borderColor: '#F44336',
-        paddingVertical: 14,
-        borderRadius: 25,
-        alignItems: 'center',
-        marginTop: 16,
+    logoutWrapper: {
+        alignItems: 'flex-end',
+        paddingRight: 8,
+        marginBottom: 32,
     },
-    logoutText: {
-        color: '#F44336',
-        fontSize: 16,
-        fontWeight: 'bold',
+    logoutButtonCircle: {
+        backgroundColor: '#F44336',
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 5,
     },
 });
 
