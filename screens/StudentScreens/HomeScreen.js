@@ -14,28 +14,71 @@ import Animated, {
 } from "react-native-reanimated";
 import { personData } from "../../data/personData";
 
-const { width } = Dimensions.get("window");
+// Theme constants
+const theme = {
+  colors: {
+    primary: "#31B7EC",
+    like: "#00cc00",
+    nope: "#ff4444",
+    star: "#ffd700",
+    flash: "#cc00cc",
+    textPrimary: "#333",
+    textSecondary: "#666",
+    white: "#fff",
+    background: "#f0f0f0",
+    notification: "red",
+  },
+  sizes: {
+    icon: 28,
+    actionButton: 30,
+    fontLarge: 20,
+    fontMedium: 18,
+    fontSmall: 14,
+    logo: 40,
+    notificationDot: 10,
+  },
+  border: {
+    radius: 10,
+    width: 2,
+  },
+};
 
-const ProfileCard = React.memo(({ profile, animatedStyle, translateX, isCurrent }) => {
-  // Animated styles for Like and Nope text, only applied if isCurrent is true
+// Constants for gesture handling
+const SWIPE_THRESHOLD = Dimensions.get("window").width / 3;
+const SWIPE_VELOCITY_THRESHOLD = 400;
+const ANIMATION_DURATION = 300;
+const SPRING_CONFIG = { damping: 15, stiffness: 100 };
+
+// Configuration for assets
+const assets = {
+  logo: require("../../assets/logo.png"),
+  defaultProfileImage: require("../../assets/girl.jpg"),
+};
+
+const ProfileCard = React.memo(({ profile, animatedStyle, translateX, isCurrent, navigation }) => {
   const likeOpacity = useAnimatedStyle(() => ({
-    opacity: isCurrent ? interpolate(translateX.value, [0, -width / 3], [0, 1]) : 0,
-    transform: [{ rotate: '-30deg' }],
+    opacity: isCurrent ? interpolate(translateX.value, [0, -SWIPE_THRESHOLD], [0, 1]) : 0,
+    transform: [{ rotate: "-30deg" }],
   }));
 
   const nopeOpacity = useAnimatedStyle(() => ({
-    opacity: isCurrent ? interpolate(translateX.value, [0, width / 3], [0, 1]) : 0,
-    transform: [{ rotate: '30deg' }],
+    opacity: isCurrent ? interpolate(translateX.value, [0, SWIPE_THRESHOLD], [0, 1]) : 0,
+    transform: [{ rotate: "30deg" }],
   }));
 
   return (
     <Animated.View style={[styles.imageContainer, animatedStyle]}>
-      <Image
-        source={profile.image}
-        style={styles.profileImage}
-        defaultSource={require("../../assets/girl.jpg")}
-        onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
-      />
+      <TouchableOpacity
+        onPress={() => navigation.navigate("LecturerDetailScreen", { profile })}
+        activeOpacity={0.8}
+      >
+        <Image
+          source={profile.image || assets.defaultProfileImage}
+          style={styles.profileImage}
+          defaultSource={assets.defaultProfileImage}
+          onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+        />
+      </TouchableOpacity>
       {isCurrent && (
         <>
           <Animated.Text style={[styles.likeText, likeOpacity]}>Like</Animated.Text>
@@ -63,26 +106,29 @@ const ProfileCard = React.memo(({ profile, animatedStyle, translateX, isCurrent 
   );
 });
 
-const HomeScreen = ({ navigation }) => {
-  // Early return for empty data
+
+
+const HomeScreen = ({ navigation, username = "User", greeting = "Hello" }) => {
+  const { width } = Dimensions.get("window");
+
   if (!personData || personData.length === 0) {
     return (
       <StudentLayout navigation={navigation}>
         <GestureHandlerRootView style={styles.container}>
           <View style={styles.logoHeader}>
-            <Image source={require("../../assets/logo.png")} style={styles.logo} />
+            <Image source={assets.logo} style={styles.logo} />
           </View>
           <View style={styles.header}>
             <View style={styles.headerText}>
-              <Text style={styles.greeting}>Xin Chào,</Text>
-              <Text style={styles.username}>ABCDE</Text>
+              <Text style={styles.greeting}>{greeting},</Text>
+              <Text style={styles.username}>{username}</Text>
             </View>
             <View style={styles.iconContainer}>
               <TouchableOpacity style={styles.icon}>
-                <Icon name="settings" size={28} color="#31B7EC" />
+                <Icon name="settings" size={theme.sizes.icon} color={theme.colors.primary} />
               </TouchableOpacity>
               <TouchableOpacity style={styles.icon}>
-                <Icon name="notifications" size={28} color="#31B7EC" />
+                <Icon name="notifications" size={theme.sizes.icon} color={theme.colors.primary} />
                 <View style={styles.notificationDot} />
               </TouchableOpacity>
             </View>
@@ -99,22 +145,22 @@ const HomeScreen = ({ navigation }) => {
   const translateX = useSharedValue(0);
   const isSwiping = useSharedValue(false);
 
-  // Precompute indices for previous, current, and next profiles
   const indices = useMemo(() => {
     const prevIndex = (currentIndex - 1 + personData.length) % personData.length;
     const nextIndex = (currentIndex + 1) % personData.length;
     return [prevIndex, currentIndex, nextIndex];
   }, [currentIndex]);
 
-  // Debounce index updates
-  const updateIndex = useCallback((newIndex) => {
-    if (personData.length === 0) return;
-    const boundedIndex = Math.max(0, Math.min(newIndex, personData.length - 1));
-    setCurrentIndex(boundedIndex);
-    translateX.value = 0; // Reset translateX to ensure gesture continuity
-  }, [translateX]);
+  const updateIndex = useCallback(
+    (newIndex) => {
+      if (personData.length === 0) return;
+      const boundedIndex = Math.max(0, Math.min(newIndex, personData.length - 1));
+      setCurrentIndex(boundedIndex);
+      translateX.value = 0;
+    },
+    [translateX]
+  );
 
-  // Gesture handler using the new Gesture API
   const panGesture = Gesture.Pan()
     .onStart(() => {
       isSwiping.value = true;
@@ -125,46 +171,45 @@ const HomeScreen = ({ navigation }) => {
     })
     .onEnd((event) => {
       isSwiping.value = false;
-      if (event.velocityX > 400 || (event.velocityX > 0 && translateX.value > width / 3)) {
-        // Swipe right: go to previous profile
+      if (event.velocityX > SWIPE_VELOCITY_THRESHOLD || (event.velocityX > 0 && translateX.value > SWIPE_THRESHOLD)) {
         translateX.value = withTiming(
           width,
-          { duration: 300, easing: Easing.bezier(0.25, 0.1, 0.25, 1) },
+          { duration: ANIMATION_DURATION, easing: Easing.bezier(0.25, 0.1, 0.25, 1) },
           () => {
             runOnJS(updateIndex)((currentIndex - 1 + personData.length) % personData.length);
           }
         );
-      } else if (event.velocityX < -400 || (event.velocityX < 0 && translateX.value < -width / 3)) {
-        // Swipe left: go to next profile
+      } else if (
+        event.velocityX < -SWIPE_VELOCITY_THRESHOLD ||
+        (event.velocityX < 0 && translateX.value < -SWIPE_THRESHOLD)
+      ) {
         translateX.value = withTiming(
           -width,
-          { duration: 300, easing: Easing.bezier(0.25, 0.1, 0.25, 1) },
+          { duration: ANIMATION_DURATION, easing: Easing.bezier(0.25, 0.1, 0.25, 1) },
           () => {
             runOnJS(updateIndex)((currentIndex + 1) % personData.length);
           }
         );
       } else {
-        // Return to center
-        translateX.value = withSpring(0, { damping: 15, stiffness: 100 });
+        translateX.value = withSpring(0, SPRING_CONFIG);
       }
     });
 
-  // Animated styles for current, previous, and next cards
   const animatedStyleCurrent = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
-    opacity: interpolate(Math.abs(translateX.value), [0, width / 3], [1, 0.8]),
+    opacity: interpolate(Math.abs(translateX.value), [0, SWIPE_THRESHOLD], [1, 0.8]),
     zIndex: 2,
   }));
 
   const animatedStylePrev = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value - width }],
-    opacity: interpolate(Math.abs(translateX.value), [0, width / 3], [0.5, 0.8]),
+    opacity: interpolate(Math.abs(translateX.value), [0, SWIPE_THRESHOLD], [0.5, 0.8]),
     zIndex: 1,
   }));
 
   const animatedStyleNext = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value + width }],
-    opacity: interpolate(Math.abs(translateX.value), [0, width / 3], [0.5, 0.8]),
+    opacity: interpolate(Math.abs(translateX.value), [0, SWIPE_THRESHOLD], [0.5, 0.8]),
     zIndex: 1,
   }));
 
@@ -172,19 +217,19 @@ const HomeScreen = ({ navigation }) => {
     <StudentLayout navigation={navigation}>
       <GestureHandlerRootView style={styles.container}>
         <View style={styles.logoHeader}>
-          <Image source={require("../../assets/logo.png")} style={styles.logo} />
+          <Image source={assets.logo} style={styles.logo} />
         </View>
         <View style={styles.header}>
           <View style={styles.headerText}>
-            <Text style={styles.greeting}>Xin Chào,</Text>
-            <Text style={styles.username}>ABCDE</Text>
+            <Text style={styles.greeting}>{greeting},</Text>
+            <Text style={styles.username}>{username}</Text>
           </View>
           <View style={styles.iconContainer}>
             <TouchableOpacity style={styles.icon}>
-              <Icon name="settings" size={28} color="#31B7EC" />
+              <Icon name="settings" size={theme.sizes.icon} color={theme.colors.primary} />
             </TouchableOpacity>
             <TouchableOpacity style={styles.icon}>
-              <Icon name="notifications" size={28} color="#31B7EC" />
+              <Icon name="notifications" size={theme.sizes.icon} color={theme.colors.primary} />
               <View style={styles.notificationDot} />
             </TouchableOpacity>
           </View>
@@ -192,27 +237,30 @@ const HomeScreen = ({ navigation }) => {
 
         <View style={styles.cardContainer}>
           {personData[indices[0]] && (
-            <ProfileCard 
-              profile={personData[indices[0]]} 
+            <ProfileCard
+              profile={personData[indices[0]]}
               animatedStyle={animatedStylePrev}
               translateX={translateX}
               isCurrent={false}
+              navigation={navigation}
             />
           )}
           <GestureDetector gesture={panGesture}>
-            <ProfileCard 
-              profile={personData[indices[1]]} 
+            <ProfileCard
+              profile={personData[indices[1]]}
               animatedStyle={animatedStyleCurrent}
               translateX={translateX}
               isCurrent={true}
+              navigation={navigation}
             />
           </GestureDetector>
           {personData[indices[2]] && (
-            <ProfileCard 
-              profile={personData[indices[2]]} 
+            <ProfileCard
+              profile={personData[indices[2]]}
               animatedStyle={animatedStyleNext}
               translateX={translateX}
               isCurrent={false}
+              navigation={navigation}
             />
           )}
         </View>
@@ -222,22 +270,22 @@ const HomeScreen = ({ navigation }) => {
             style={styles.actionButton}
             onPress={() => updateIndex((currentIndex - 1 + personData.length) % personData.length)}
           >
-            <Icon name="arrow-back" size={30} color="#ff4444" />
+            <Icon name="arrow-back" size={theme.sizes.icon + 2} color={theme.colors.nope} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
-            <Icon name="close" size={30} color="#ff4444" />
+            <Icon name="close" size={theme.sizes.icon + 2} color={theme.colors.nope} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
-            <Icon name="star" size={30} color="#ffd700" />
+            <Icon name="star" size={theme.sizes.icon + 2} color={theme.colors.star} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton}>
-            <Icon name="heart" size={30} color="#00cc00" />
+            <Icon name="heart" size={theme.sizes.icon + 2} color={theme.colors.like} />
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => updateIndex((currentIndex + 1) % personData.length)}
           >
-            <Icon name="flash" size={30} color="#cc00cc" />
+            <Icon name="flash" size={theme.sizes.icon + 2} color={theme.colors.flash} />
           </TouchableOpacity>
         </View>
       </GestureHandlerRootView>
@@ -245,46 +293,48 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
+    backgroundColor: theme.colors.white,
   },
   logoHeader: {
     alignItems: "center",
     padding: 10,
-    backgroundColor: "#fff",
+    backgroundColor: theme.colors.white,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
     padding: 15,
-    backgroundColor: "#fff",
+    backgroundColor: theme.colors.white,
     justifyContent: "space-between",
   },
   logo: {
-    width: 40,
-    height: 40,
+    width: theme.sizes.logo,
+    height: theme.sizes.logo,
   },
   headerText: {
     flexDirection: "column",
     alignItems: "flex-start",
   },
   greeting: {
-    fontSize: 20,
+    fontSize: theme.sizes.fontLarge,
     fontWeight: "bold",
-    color: "#333",
+    color: theme.colors.textPrimary,
   },
   username: {
-    fontSize: 18,
-    color: "#007bff",
+    fontSize: theme.sizes.fontMedium,
+    color: theme.colors.primary,
   },
   iconContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#f0f0f0",
+    backgroundColor: theme.colors.background,
     padding: 5,
-    borderRadius: 8,
+    borderRadius: theme.border.radius - 2,
+    // marginBottom:10
   },
   icon: {
     marginHorizontal: 10,
@@ -294,16 +344,16 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 0,
     right: 0,
-    width: 10,
-    height: 10,
-    backgroundColor: "red",
-    borderRadius: 5,
+    width: theme.sizes.notificationDot,
+    height: theme.sizes.notificationDot,
+    backgroundColor: theme.colors.notification,
+    borderRadius: theme.sizes.notificationDot / 2,
   },
   cardContainer: {
-    flex: 1,
+    // flex: 1,
     position: "relative",
     height: "70%",
-    marginTop: 10,
+    // marginTop: 10,
   },
   imageContainer: {
     position: "absolute",
@@ -313,34 +363,34 @@ const styles = StyleSheet.create({
   profileImage: {
     width: "100%",
     height: "100%",
-    borderRadius: 10,
+    borderRadius: theme.border.radius,
     resizeMode: "cover",
   },
   likeText: {
     position: "absolute",
     top: 20,
-    right: 20, // Changed to top right
+    right: 20,
     fontSize: 32,
     fontWeight: "bold",
-    color: "#00cc00",
+    color: theme.colors.like,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     padding: 10,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#00cc00",
+    borderRadius: theme.border.radius,
+    borderWidth: theme.border.width,
+    borderColor: theme.colors.like,
   },
   nopeText: {
     position: "absolute",
     top: 20,
-    left: 20, // Changed to top left
+    left: 20,
     fontSize: 32,
     fontWeight: "bold",
-    color: "#ff4444",
+    color: theme.colors.nope,
     backgroundColor: "rgba(255, 255, 255, 0.8)",
     padding: 10,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#ff4444",
+    borderRadius: theme.border.radius,
+    borderWidth: theme.border.width,
+    borderColor: theme.colors.nope,
   },
   overlay: {
     position: "absolute",
@@ -354,19 +404,18 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   name: {
-    fontSize: 20,
+    fontSize: theme.sizes.fontLarge,
     fontWeight: "bold",
-    color: "#333",
+    color: theme.colors.textPrimary,
   },
   location: {
-    fontSize: 14,
-    color: "#666",
+    fontSize: theme.sizes.fontSmall,
+    color: theme.colors.textSecondary,
   },
   skillsContainer: {
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 10,
-    marginTop: 10,
   },
   skillButton: {
     paddingVertical: 5,
@@ -374,17 +423,17 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   skillText: {
-    color: "#fff",
-    fontSize: 14,
+    color: theme.colors.white,
+    fontSize: theme.sizes.fontSmall,
   },
   actionButtons: {
     flexDirection: "row",
     justifyContent: "space-around",
   },
   actionButton: {
-    width: 60,
-    height: 60,
-    borderRadius: 50,
+    width: theme.sizes.actionButton,
+    height: theme.sizes.actionButton,
+    borderRadius: theme.sizes.actionButton / 2,
     justifyContent: "center",
     alignItems: "center",
   },
