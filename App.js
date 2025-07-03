@@ -28,12 +28,7 @@ import ChatListScreen from './screens/match/ChatListScreen';
 import ChatDetailScreen from './screens/match/ChatDetailScreen';
 import VideoCallScreen from './screens/match/VideoCallScreen';
 
-import AdminHomeScreen from './screens/admin/AdminHomeScreen';
-import AdminPackageScreen from './screens/admin/AdminPackageScreen';
-import AdminProfile from './screens/admin/AdminProfile';
-import AdminNotificationScreen from './screens/admin/AdminNotificationScreen';
-import AdminUserListScreen from './screens/admin/AdminUserListScreen';
-import AdminTutorListScreen from './screens/admin/AdminTutorListScreen';
+
 
 
 const Stack = createNativeStackNavigator();
@@ -72,13 +67,7 @@ export default function App() {
         <Stack.Screen name="ChatDetailScreen" component={ChatDetailScreen} />
         <Stack.Screen name="VideoCall" component={VideoCallScreen} />
 
-        {/* Admin */}
-        <Stack.Screen name="AdminHome" component={AdminHomeScreen} />
-        <Stack.Screen name="AdminPackageScreen" component={AdminPackageScreen} />
-        <Stack.Screen name="AdminProfile" component={AdminProfile} />
-        <Stack.Screen name="AdminNotificationScreen" component={AdminNotificationScreen} />
-        <Stack.Screen name="AdminUserListScreen" component={AdminUserListScreen} />
-        <Stack.Screen name="AdminTutorListScreen" component={AdminTutorListScreen} />
+
 
       </Stack.Navigator>
     </NavigationContainer>
