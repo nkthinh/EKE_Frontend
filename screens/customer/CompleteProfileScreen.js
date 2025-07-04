@@ -14,7 +14,7 @@ export default function CompleteProfileScreen() {
   const onDateChange = (event, selectedDate) => {
     const currentDate = selectedDate || birthYear;
     const adjustedDate = new Date(currentDate.getTime());
-    setShowDatePicker(Platform.OS === 'ios'); 
+    setShowDatePicker(Platform.OS === 'ios');
     setBirthYear(adjustedDate);
   };
 
@@ -113,23 +113,25 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   headerContainer: {
-    marginBottom: 20,
+    marginBottom: 30,
   },
   topHeaderText: {
-    fontSize: 16,
-    color: '#28a745',
-    marginBottom: 10,
+    fontSize: 30,
+    color: '#31B7EC',
+    fontWeight: 'bold',
+    marginBottom: 30,
+    marginTop: 30,
     textAlign: 'center',
   },
   headerText: {
-    fontSize: 20,
+    fontSize: 25,
     fontWeight: 'bold',
     color: '#000',
     marginBottom: 5,
     textAlign: 'left',
   },
   subHeaderText: {
-    fontSize: 14,
+    fontSize: 18,
     color: '#666',
     marginBottom: 20,
     textAlign: 'left',
@@ -140,7 +142,7 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     marginBottom: 10,
-    backgroundColor: '#28a745',
+    backgroundColor: '#31B7EC',
     borderRadius: 50,
     padding: 30,
   },
@@ -148,7 +150,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 10,
     right: 0,
-    backgroundColor: '#28a745',
+    backgroundColor: '#31B7EC',
     borderRadius: 15,
     padding: 5,
   },
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 20,
     color: '#333',
     marginBottom: 5,
   },
@@ -168,7 +170,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 25,
     padding: 10,
-    fontSize: 16,
+    fontSize: 18,
     backgroundColor: '#fff',
     height: 50,
   },
@@ -177,21 +179,21 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 25,
     backgroundColor: '#fff',
-    height: 55, 
+    height: 55,
     justifyContent: 'center',
     paddingVertical: 5, //
   },
   picker: {
-    height: 60, 
+    height: 60,
     width: '100%',
   },
   dateText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
     lineHeight: 30,
   },
   updateButton: {
-    backgroundColor: '#28a745',
+    backgroundColor: '#31B7EC',
     padding: 10,
     borderRadius: 25,
     alignItems: 'center',
@@ -201,7 +203,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
