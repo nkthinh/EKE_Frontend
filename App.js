@@ -79,6 +79,8 @@ export default function App() {
         <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
         <Stack.Screen name="ChatDetailScreen" component={ChatDetailScreen} />
         <Stack.Screen name="VideoCall" component={VideoCallScreen} />
+
+        {/* Student */}
         <Stack.Screen
           name="StudentHomeScreen"
           component={HomeScreen}

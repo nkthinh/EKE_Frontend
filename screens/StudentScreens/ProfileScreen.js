@@ -1,166 +1,249 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import StudentLayout from "../../layout/StudentLayout";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Dimensions } from 'react-native';
+
+const { width } = Dimensions.get('window');
 
 const ProfileScreen = ({ navigation }) => {
+  const [subscription, setSubscription] = useState(null);
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      const json = await AsyncStorage.getItem('subscriptionPlan');
+      if (json) setSubscription(JSON.parse(json));
+    };
+    fetchPlan();
+  }, []);
   return (
-    <StudentLayout navigation={navigation}>
-      <View style={styles.container}>
-        <Image source={require("../../assets/logo.png")} style={styles.logo} />
-        <Text style={styles.title}>Phụ Huynh/ Học Sinh</Text>
-        <View style={styles.profileContainer}>
-          <Image
-            source={require("../../assets/girl.jpg")}
-            style={styles.profileImage}
-          />
-          <View style={styles.progressBar} />
-        </View>
-        <Text style={styles.id}>ID: 1234567</Text>
-        <View style={styles.buttonRow}>
-          <View style={styles.buttonWrapper}>
-            <TouchableOpacity style={[styles.iconButton, styles.shadow]}>
-              <Icon name="log-out-outline" size={20} color="#000" />
-            </TouchableOpacity>
-            <Text style={styles.buttonText}>Đăng Xuất</Text>
+    <View style={styles.container}>
+      {/* PHẦN TRÊN: Vòng bo trắng */}
+      <View style={styles.topContainer}>
+        <Image source={require('../../assets/logo1.png')} style={styles.logo} />
+        <Text style={styles.role}>
+          Phụ huynh/Học viên <Text style={styles.rating}></Text>
+        </Text>
+        <View style={styles.avatarWrapper}>
+          <Image source={require('../../assets/avatar.png')} style={styles.avatar} />
+          <View style={styles.avatarBorder} />
+          <View style={styles.idBadge}>
+            <Text style={styles.idText}>ID: 1234567</Text>
           </View>
-          <View style={styles.buttonWrapper}>
+        </View>
+
+        <Text style={styles.name}>Nguyễn Thị Thảo</Text>
+
+        <View style={styles.actionRow}>
+          {[
+            { icon: 'logout', label: 'Đăng Xuất', onPress: () => navigation.replace('TutorRegister') },
+            { icon: 'pencil', label: 'Hồ Sơ', isProfile: true, onPress: () => navigation.navigate('StudentUpdateProfile') },
+            { icon: 'wallet', label: 'Gói ĐK', onPress: () => navigation.replace('StudentWalletScreen') }
+
+          ].map((btn, index) => (
             <TouchableOpacity
-              style={[styles.iconButton, styles.shadow]}
-              onPress={() => navigation.navigate("StudentWalletScreen")}
+              key={index}
+              style={[styles.actionItem, btn.isProfile && { marginTop: 40 }]}
+              onPress={btn.onPress}
             >
-              <Icon name="wallet-outline" size={20} color="#000" />
+              <View style={styles.circle}>
+                <Icon name={btn.icon} size={35} color="#7B7B7B" />
+                {btn.isProfile && <View style={styles.redDot} />}
+              </View>
+              <Text style={styles.actionLabel}>{btn.label}</Text>
             </TouchableOpacity>
-            <Text style={styles.buttonText}>Ví Tiền</Text>
+          ))}
+        </View>
+      </View>
+
+      {/* PHẦN DƯỚI: EKE Platinum */}
+      <View style={styles.bottomArea}>
+        <View style={styles.premiumCard}>
+          <Text style={styles.platinumTitle}>EKE Platinum</Text>
+          <Text style={styles.platinumDesc}>Nâng Cấp Tài Khoản Của Bạn</Text>
+
+          <View style={styles.dotWrapper}>
+            <View style={[styles.dot, { backgroundColor: '#000' }]} />
+            <View style={[styles.dot, { backgroundColor: '#000', opacity: 0.3 }]} />
           </View>
-        </View>
-        <View style={styles.centerButtonWrapper}>
-          <TouchableOpacity
-            style={[styles.iconButton, styles.shadow]}
-            onPress={() => navigation.navigate("StudentUpdateProfile")}
-          >
-            <Icon name="person-outline" size={20} color="#000" />
-          </TouchableOpacity>
-          <Text style={styles.buttonText}>Hồ Sơ</Text>
-        </View>
-        <View style={styles.platinumSection}>
-          <Text style={styles.platinumText}>EKE Platinum</Text>
-          <Text style={styles.upgradeText}>Nâng cấp tài khoản</Text>
-          <TouchableOpacity
-            style={[styles.registerButton, styles.shadow]}
-            onPress={() => navigation.navigate("StudentPackageScreen")}
-          >
-            <Text style={styles.registerButtonText}>Đăng Ký</Text>
+
+          <TouchableOpacity style={styles.upgradeButton} onPress={() => navigation.navigate('StudentPackageScreen')}>
+            <Text style={styles.upgradeText}>ĐĂNG KÝ</Text>
           </TouchableOpacity>
         </View>
       </View>
-    </StudentLayout>
+
+      <StudentLayout navigation={navigation} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "white",
-    alignItems: "center",
-    paddingTop: 20,
+    backgroundColor: '#F2F4F8'
+  },
+
+  // TOP
+  topContainer: {
+    backgroundColor: '#fff',
+    borderBottomLeftRadius: 260,
+    borderBottomRightRadius: 260,
+    alignItems: 'center',
+    paddingTop: 70,
+    paddingBottom: 45,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 8,
+    marginBottom: 40,
+    width: '130%',
+    marginLeft: -60,
+    marginRight: -60,
   },
   logo: {
+    width: 150,
+    height: 120,
+    resizeMode: 'contain',
+    marginTop: -20
+  },
+  role: {
+    fontSize: 20,
+    color: '#00AEEF',
+    marginTop: 4
+  },
+  rating: {
+    color: '#FFC107'
+  },
+
+  avatarWrapper: {
+    marginTop: 20,
+    alignItems: 'center',
+    position: 'relative'
+  },
+  avatar: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+  },
+  avatarBorder: {
+    position: 'absolute',
+    top: -8,
+    left: -8,
+    width: 176,
+    height: 176,
+    borderRadius: 88,
+    borderWidth: 5,
+    borderColor: '#00AEEF',
+  },
+  idBadge: {
+    position: 'absolute',
+    bottom: -15,
+    alignSelf: 'center',
+    backgroundColor: '#256DFF',
+    paddingHorizontal: 13,
+    paddingVertical: 4,
+    borderRadius: 16,
+    zIndex: 2,
+  },
+  idText: {
+    color: '#fff',
+    fontSize: 20
+  },
+  name: {
+    fontSize: 30,
+    fontWeight: 'bold',
+    color: '#222',
+    marginTop: 30
+  },
+
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '80%',
+    marginTop: 20,
+    paddingHorizontal: 30,
+  },
+  actionItem: {
+    alignItems: 'center',
+  },
+  circle: {
     width: 70,
     height: 70,
-    marginTop: 20,
+    borderRadius: 35,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 20,
-    color: "#31B7EC",
+  redDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#FF3B30',
   },
-  profileContainer: {
-    position: "relative",
-    marginBottom: 10,
+  actionLabel: {
+    fontSize: 15,
+    color: '#7B7B7B',
+    marginTop: 6,
   },
-  profileImage: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
+
+  // BOTTOM
+  bottomArea: {
+    alignItems: 'center',
+    backgroundColor: '#F2F4F8',
+    paddingTop: 0,
+    marginBottom: 90,
   },
-  progressBar: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    borderRadius: 100,
-    borderWidth: 5,
-    borderColor: "#00f",
-    opacity: 0.2,
+
+  premiumCard: {
+    backgroundColor: '#F2F4F8',
+    width: width - 40,
+    borderRadius: 20,
+    padding: 5,
+    alignItems: 'center',
+    marginTop: -25,
   },
-  id: {
-    fontSize: 16,
-    marginBottom: 20,
+  platinumTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#000'
   },
-  buttonRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    width: "70%",
+  platinumDesc: {
+    fontSize: 20,
+    color: '#888',
+    marginTop: 6
   },
-  buttonWrapper: {
-    alignItems: "center",
+  dotWrapper: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 12
   },
-  centerButtonWrapper: {
-    alignItems: "center",
-    marginBottom: 20,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#ccc',
   },
-  iconButton: {
-    width: 60,
-    height: 60,
+  upgradeButton: {
+    backgroundColor: '#1E88E5',
     borderRadius: 30,
-    backgroundColor: "white",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  buttonText: {
-    fontSize: 14,
-    textAlign: "center",
-    color: "#000",
-  },
-  platinumSection: {
-    backgroundColor: "#F5F7FA",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 40,
-    alignItems: "center",
-    width: "100%",
-    position: "absolute",
-    bottom: 50,
-  },
-  platinumText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 5,
+    paddingVertical: 12,
+    paddingHorizontal: 30,
   },
   upgradeText: {
-    fontSize: 14,
-    color: "#666",
-    marginBottom: 10,
-  },
-  registerButton: {
-    backgroundColor: "#FCFCFE",
-    paddingVertical: 20,
-    paddingHorizontal: 70,
-    borderRadius: 30,
-  },
-  registerButtonText: {
-    fontSize: 16,
-  },
-  shadow: {
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4.65,
-    elevation: 8,
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
   },
 });
 
