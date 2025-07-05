@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 // Screens
 import SplashScreen from './screens/launch/SplashScreen';
 import RoleSelectionScreen from './screens/launch/RoleSelectionScreen';
+import OnboardingScreen from './screens/launch/OnboardingScreen';
 
 import TutorRegisterScreen from './screens/tutor/TutorRegisterScreen';
 import TutorSignupScreen from './screens/tutor/TutorSignupScreen';
@@ -48,54 +49,12 @@ const Stack = createNativeStackNavigator();
 
 export default function App() {
 
-const LaunchScreen = ({ navigation }) => {
-  const currentRouteName = useNavigationState(
-    (state) => state.routes[state.index].name
-  );
-  useEffect(() => {
-    if (currentRouteName === "Launch") {
-      const timer = setTimeout(() => {
-        navigation.navigate("Onboarding1");
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [navigation, currentRouteName]);
 
   return (
-    <View style={styles.launchContainer}>
-      <Image source={require("./assets/logo.png")} style={styles.logo} />
-    </View>
-  );
-};
-  return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Onboarding3" screenOptions={{ headerShown: false }}>
+      <Stack.Navigator initialRouteName="Splash" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Splash" component={SplashScreen} />
-        <Stack.Screen
-          name="Launch"
-          component={LaunchScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Onboarding1"
-          component={OnboardingScreen1}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Onboarding2A"
-          component={OnboardingScreen2A}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Onboarding2B"
-          component={OnboardingScreen2B}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="Onboarding3"
-          component={OnboardingScreen3}
-          options={{ headerShown: false }}
-        />
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
 
         {/* Tutor */}
@@ -120,7 +79,7 @@ const LaunchScreen = ({ navigation }) => {
         <Stack.Screen name="ChatListScreen" component={ChatListScreen} />
         <Stack.Screen name="ChatDetailScreen" component={ChatDetailScreen} />
         <Stack.Screen name="VideoCall" component={VideoCallScreen} />
-         <Stack.Screen
+        <Stack.Screen
           name="StudentHomeScreen"
           component={HomeScreen}
           options={{ headerShown: false }}
@@ -145,7 +104,7 @@ const LaunchScreen = ({ navigation }) => {
           component={LecturerFeedbackScreen}
           options={{ headerShown: false }}
         />
-         <Stack.Screen
+        <Stack.Screen
           name="StudentFeedbackScreen"
           component={FeedbackScreen}
           options={{ headerShown: false }}
@@ -198,6 +157,6 @@ const LaunchScreen = ({ navigation }) => {
 
 
       </Stack.Navigator>
-    </NavigationContainer>
+    </NavigationContainer >
   );
 }

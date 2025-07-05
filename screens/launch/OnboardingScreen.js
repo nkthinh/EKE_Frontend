@@ -39,7 +39,7 @@ const OnboardingScreen = ({ navigation }) => {
         if (index < slides.length - 1) {
             setIndex(index + 1);
         } else {
-            navigation.navigate('OnboardingScreen');
+            navigation.navigate('TutorRegister');
         }
     };
 
