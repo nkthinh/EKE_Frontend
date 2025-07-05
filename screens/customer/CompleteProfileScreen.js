@@ -3,8 +3,10 @@ import { StyleSheet, Text, View, TextInput, TouchableOpacity, Platform } from 'r
 import Icon from 'react-native-vector-icons/FontAwesome'; // For icons
 import { Picker } from '@react-native-picker/picker'; // For dropdown select
 import DateTimePicker from '@react-native-community/datetimepicker'; // For date picker
+import { useNavigation } from '@react-navigation/native';
 
 export default function CompleteProfileScreen() {
+
   const [fullName, setFullName] = useState('example@example.com');
   const [gender, setGender] = useState('Nam');
   const [phoneNumber, setPhoneNumber] = useState('123 456 789');
@@ -18,6 +20,7 @@ export default function CompleteProfileScreen() {
     setBirthYear(adjustedDate);
   };
 
+  const navigation = useNavigation();
   return (
     <View style={styles.container}>
       {/* Header Section */}
@@ -98,7 +101,10 @@ export default function CompleteProfileScreen() {
       </View>
 
       {/* Update Button */}
-      <TouchableOpacity style={styles.updateButton}>
+      <TouchableOpacity
+        style={styles.updateButton}
+        onPress={() => navigation.navigate('StudentHomeScreen')}
+      >
         <Text style={styles.buttonText}>HOÀN TẤT</Text>
       </TouchableOpacity>
     </View>
