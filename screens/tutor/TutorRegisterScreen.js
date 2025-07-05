@@ -8,6 +8,7 @@ import {
     StyleSheet,
     Image,
     Dimensions,
+    Alert,
 } from 'react-native';
 
 const { width } = Dimensions.get('window');

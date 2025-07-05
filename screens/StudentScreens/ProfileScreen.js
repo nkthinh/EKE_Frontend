@@ -27,7 +27,7 @@ const ProfileScreen = ({ navigation }) => {
           <View style={styles.buttonWrapper}>
             <TouchableOpacity
               style={[styles.iconButton, styles.shadow]}
-              onPress={() => navigation.navigate("WalletScreen")}
+              onPress={() => navigation.navigate("StudentWalletScreen")}
             >
               <Icon name="wallet-outline" size={20} color="#000" />
             </TouchableOpacity>
@@ -37,7 +37,7 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.centerButtonWrapper}>
           <TouchableOpacity
             style={[styles.iconButton, styles.shadow]}
-            onPress={() => navigation.navigate("UpdateProfile")}
+            onPress={() => navigation.navigate("StudentUpdateProfile")}
           >
             <Icon name="person-outline" size={20} color="#000" />
           </TouchableOpacity>
@@ -48,7 +48,7 @@ const ProfileScreen = ({ navigation }) => {
           <Text style={styles.upgradeText}>Nâng cấp tài khoản</Text>
           <TouchableOpacity
             style={[styles.registerButton, styles.shadow]}
-            onPress={() => navigation.navigate("PackageScreen")}
+            onPress={() => navigation.navigate("StudentPackageScreen")}
           >
             <Text style={styles.registerButtonText}>Đăng Ký</Text>
           </TouchableOpacity>

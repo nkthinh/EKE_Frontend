@@ -36,7 +36,7 @@ const LecturerFeedbackScreen = ({ navigation }) => {
       {/* Lecturers */}
       <View style={styles.lecturers}>
         {lecturers.map((lecturer, index) => (
-          <TouchableOpacity key={index} style={styles.lecturerItem} onPress={() => navigation.navigate("FeedbackScreen", { name: lecturer.name })}>
+          <TouchableOpacity key={index} style={styles.lecturerItem} onPress={() => navigation.navigate("StudentFeedbackScreen", { name: lecturer.name })}>
             <Image source={lecturer.image} style={styles.lecturerImage} />
             <Text style={styles.lecturerName}>{lecturer.name}</Text>
             <Icon
