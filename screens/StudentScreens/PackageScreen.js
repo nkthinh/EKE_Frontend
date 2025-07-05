@@ -1,207 +1,156 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
-import StudentLayout from "../../layout/StudentLayout";
+import React, { useState, useEffect } from 'react';
+import {
+  View, Text, TouchableOpacity, ScrollView, StyleSheet, Dimensions, Alert
+} from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const PackageScreen = ({ navigation }) => {
-  const [isInfoVisible, setIsInfoVisible] = useState(true);
+const UpgradeScreen = ({ navigation }) => {
+  const [selected, setSelected] = useState('Silver');
+  const [prices, setPrices] = useState({
+    Silver: '50000',
+    Gold: '90000',
+    Diamond: '130000',
+  });
 
-  const toggleInfo = () => {
-    setIsInfoVisible(!isInfoVisible);
+  useEffect(() => {
+    const loadPrices = async () => {
+      try {
+        const stored = await AsyncStorage.getItem('packagePrices');
+        if (stored) setPrices(JSON.parse(stored));
+      } catch (e) {
+        console.warn('Không thể tải giá gói:', e);
+      }
+    };
+    loadPrices();
+  }, []);
+
+  const handleRegister = async () => {
+    const today = new Date().toISOString();
+    const nextDate = new Date();
+    nextDate.setMonth(nextDate.getMonth() + 1);
+
+    const plan = {
+      name: selected,
+      startDate: today,
+      nextRenewalDate: nextDate.toISOString(),
+      autoRenew: true,
+    };
+
+    try {
+      await AsyncStorage.setItem('subscriptionPlan', JSON.stringify(plan));
+      Alert.alert('✅ Thành công', `Đăng ký gói ${selected} thành công!`);
+      navigation.navigate('StudentWalletScreen');
+    } catch (error) {
+      Alert.alert('❌ Lỗi', 'Không thể lưu gói đăng ký.');
+    }
   };
 
   return (
-    <StudentLayout navigation={navigation}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Icon name="arrow-back" size={24} color="#000" />
+    <View style={styles.wrapper}>
+      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+        <Icon name="arrow-left" size={30} color="#000" />
+      </TouchableOpacity>
+
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Nâng Cấp Tài Khoản</Text>
+        <Text style={styles.subTitle}>Chọn gói đăng ký dành cho Học Viên</Text>
+
+        {['Silver', 'Gold', 'Diamond'].map((level) => (
+          <TouchableOpacity
+            key={level}
+            style={[
+              styles.option,
+              selected === level && styles.optionSelected
+            ]}
+            onPress={() => setSelected(level)}
+          >
+            <View>
+              <Text style={styles.optionTitle}>{level}</Text>
+              <Text style={styles.optionDesc}>Thanh toán hàng tháng</Text>
+            </View>
+            <Text style={styles.price}>{parseInt(prices[level]).toLocaleString()} đ</Text>
+            <Icon
+              name={selected === level ? 'check-circle' : 'check-circle-outline'}
+              size={30}
+              color={selected === level ? '#3C90EF' : '#ccc'}
+            />
           </TouchableOpacity>
-          <View style={styles.headerText}>
-            <Text style={styles.title}>Nâng Cấp Tài Khoản Platinum</Text>
-            <Text style={styles.subtitle}>Dành cho tài khoản Phụ huynh/ Học Viên </Text>
+        ))}
+
+        <Text style={styles.featureHeader}>Tính Năng Bao Gồm</Text>
+        {[
+          'Tăng Giới Hạn Danh Sách Học Viên',
+          'Sử Dụng Trợ Lý Học Tập AI',
+          'Không Hiển Thị Quảng Cáo',
+        ].map((text, i) => (
+          <View key={i} style={styles.feature}>
+            <Text style={styles.featureText}>{text}</Text>
+            <Icon name="check-circle" size={24} color="green" />
           </View>
-        </View>
-        <View style={styles.packages}>
-          <TouchableOpacity style={styles.package}>
-            <View style={styles.packageLeft}>
-              <Text style={styles.packageName}>Silver</Text>
-              <Text style={styles.packageNote}>Thanh toán hàng tháng</Text>
-            </View>
-            <View style={styles.packageRight}>
-              <Text style={styles.packagePrice}>50.000 đ</Text>
-              <View style={styles.checkCircle}>
-                <Icon name="checkmark" size={16} color="#000" />
-              </View>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.package}>
-            <View style={styles.packageLeft}>
-              <Text style={styles.packageName}>Gold</Text>
-              <Text style={styles.packageNote}>Thanh toán hàng tháng</Text>
-            </View>
-            <View style={styles.packageRight}>
-              <Text style={styles.packagePrice}>90.000 đ</Text>
-              <View style={styles.checkCircle}>
-                <Icon name="checkmark" size={16} color="#000" />
-              </View>
-            </View>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.package}>
-            <View style={styles.packageLeft}>
-              <Text style={styles.packageName}>Diamond</Text>
-              <Text style={styles.packageNote}>Thanh toán hàng tháng</Text>
-            </View>
-            <View style={styles.packageRight}>
-              <Text style={styles.packagePrice}>130.000 đ</Text>
-              <View style={styles.checkCircle}>
-                <Icon name="checkmark" size={16} color="#000" />
-              </View>
-            </View>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.info}>
-          <View style={styles.infoHeader}>
-            <Text style={styles.infoTitle}>Các Tình Năng Mới</Text>
-            <TouchableOpacity onPress={toggleInfo}>
-              <Icon name="remove" size={20} color="#6D4AFF" />
-            </TouchableOpacity>
-          </View>
-          {isInfoVisible && (
-            <>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoText}>Tăng Giới Hạn Danh Sách Gia Sư Cô Thẻ Kết Nối</Text>
-                <Icon name="checkmark-circle" size={20} color="#00C853" />
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoText}>Sử Dụng Trợ Lý Học Tập AI</Text>
-                <Icon name="checkmark-circle" size={20} color="#00C853" />
-              </View>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoText}>Khóa Hiện Thị Quảng Cáo</Text>
-                <Icon name="checkmark-circle" size={20} color="#00C853" />
-              </View>
-            </>
-          )}
-        </View>
-        <TouchableOpacity style={styles.registerButton}>
-          <Text style={styles.registerButtonText}>Đăng Ký</Text>
+        ))}
+
+        <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
+          <Text style={styles.registerText}>Đăng Ký</Text>
         </TouchableOpacity>
-      </View>
-    </StudentLayout>
+      </ScrollView>
+    </View>
   );
 };
 
+const { width } = Dimensions.get('window');
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#fff",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 50,
+  wrapper: { flex: 1, backgroundColor: '#fff' },
+  container: { padding: 24, paddingBottom: 100, paddingTop: 100 },
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    backgroundColor: '#fff',
+    padding: 8,
+    borderRadius: 20,
+    elevation: 4,
+    zIndex: 10,
   },
-  header: {
-    marginBottom: 20,
-    marginTop: 50,
+  title: { fontSize: 26, fontWeight: 'bold', textAlign: 'center', marginBottom: 4 },
+  subTitle: { textAlign: 'center', color: '#888', fontSize: 18, marginBottom: 24 },
+  option: {
+    backgroundColor: '#e7f3ff',
+    borderRadius: 14,
+    padding: 20,
+    marginBottom: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    elevation: 2,
   },
-  headerText: {
-    alignItems: "center",
+  optionSelected: {
+    backgroundColor: '#cde8ff',
+    borderWidth: 1.5,
+    borderColor: '#3C90EF',
   },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#666",
-  },
-  packages: {
-    marginBottom: 20,
-  },
-  package: {
-    backgroundColor: "#E0F7FA",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-    paddingBlock: 20,
-  },
-  packageLeft: {
-    flex: 1,
-  },
-  packageRight: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  packageName: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  packagePrice: {
-    fontSize: 16,
-    color: "#000",
-    marginRight: 10,
-  },
-  packageNote: {
-    fontSize: 12,
-    color: "#666",
-  },
-  checkCircle: {
-    width: 24,
-    height: 24,
+  optionTitle: { fontSize: 20, fontWeight: 'bold' },
+  optionDesc: { fontSize: 16, color: '#555', marginTop: 2 },
+  price: { fontSize: 18, fontWeight: 'bold', marginHorizontal: 12 },
+  featureHeader: { fontSize: 22, fontWeight: '600', marginTop: 30, marginBottom: 14 },
+  feature: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5faff',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: "#fff",
-    justifyContent: "center",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ccc",
+    marginBottom: 12,
   },
-  info: {
-    marginBottom: 20,
-  },
-  infoHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  infoItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 5,
-  },
-  infoText: {
-    fontSize: 14,
-    flex: 1,
-  },
+  featureText: { fontSize: 18, color: '#333', flex: 1, paddingRight: 10 },
   registerButton: {
-    backgroundColor: "#6D4AFF",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    position: "absolute",
-    bottom: 10,
-    width: "90%",
-    alignSelf: "center",
+    backgroundColor: '#31B7EC',
+    paddingVertical: 16,
+    borderRadius: 30,
+    alignItems: 'center',
+    marginTop: 30,
   },
-  registerButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
+  registerText: { fontSize: 22, color: '#fff', fontWeight: 'bold' },
 });
 
-export default PackageScreen;
+export default UpgradeScreen;

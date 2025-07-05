@@ -1,236 +1,221 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import React, { useState, useCallback } from 'react';
+import {
+  View, Text, StyleSheet, TouchableOpacity, Alert
+} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import StudentLayout from "../../layout/StudentLayout";
-import Icon from "react-native-vector-icons/Ionicons";
+import { useFocusEffect } from '@react-navigation/native';
 
 const WalletScreen = ({ navigation }) => {
+  const [plan, setPlan] = useState(null);
+
+  const fetchPlan = async () => {
+    const json = await AsyncStorage.getItem('subscriptionPlan');
+    if (json) {
+      const parsed = JSON.parse(json);
+
+      // Bổ sung ngày gia hạn nếu chưa có
+      if (!parsed.nextRenewalDate) {
+        const nextDate = new Date(parsed.startDate);
+        nextDate.setMonth(nextDate.getMonth() + 1);
+        parsed.nextRenewalDate = nextDate.toISOString();
+        await AsyncStorage.setItem('subscriptionPlan', JSON.stringify(parsed));
+      }
+
+      setPlan(parsed);
+    } else {
+      setPlan(null);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchPlan();
+    }, [])
+  );
+
+  const isExpired = (nextDate) => {
+    return new Date(nextDate) < new Date();
+  };
+
+  const getPrice = (planName) => {
+    switch (planName) {
+      case 'Silver': return '50.000 đ';
+      case 'Gold': return '90.000 đ';
+      case 'Diamond': return '130.000 đ';
+      default: return '---';
+    }
+  };
+
+  const cancelAutoRenew = async () => {
+    Alert.alert(
+      'Huỷ tự động gia hạn',
+      'Bạn có chắc muốn huỷ tự động gia hạn gói này?',
+      [
+        { text: 'Không' },
+        {
+          text: 'Đồng ý',
+          onPress: async () => {
+            const updated = { ...plan, autoRenew: false };
+            await AsyncStorage.setItem('subscriptionPlan', JSON.stringify(updated));
+            setPlan(updated);
+            alert('Đã huỷ tự động gia hạn.');
+          },
+        },
+      ]
+    );
+  };
+
   return (
-    <StudentLayout navigation={navigation}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <View style={styles.topRow}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Text style={styles.backArrow}>←</Text>
-            </TouchableOpacity>
-            <Icon
-              name="notifications"
-              size={24}
-              color="#fff"
-              style={styles.notificationIcon}
-            />
-          </View>
-          <View style={styles.profile}>
-            <Image
-              source={require("../../assets/girl.jpg")}
-              style={styles.profileImage}
-            />
+    <View style={styles.container}>
+      {/* Nút quay lại */}
+      <TouchableOpacity onPress={() => navigation.navigate('StudentHomeScreen')} style={styles.backButton}>
+        <Icon name="arrow-left" size={24} color="#000" />
+      </TouchableOpacity>
+
+      <Text style={styles.title}>Gói Đăng Ký</Text>
+
+      {plan ? (
+        <>
+          <Text style={styles.total}>Tổng số gói đã đăng ký: 1</Text>
+
+          <View style={styles.card}>
+            <Text style={styles.label}>Gói đang sử dụng:</Text>
+            <Text style={styles.planName}>{plan.name}</Text>
+
+            <Text style={styles.label}>Giá tiền:</Text>
+            <Text style={styles.value}>{getPrice(plan.name)}</Text>
+
+            <Text style={styles.label}>Ngày đăng ký:</Text>
+            <Text style={styles.value}>
+              {new Date(plan.startDate).toLocaleDateString('vi-VN')}
+            </Text>
+
+            <Text style={styles.label}>Ngày gia hạn tiếp theo:</Text>
+            <Text style={styles.value}>
+              {new Date(plan.nextRenewalDate).toLocaleDateString('vi-VN')}
+            </Text>
+
+            <Text style={styles.label}>Tự động gia hạn:</Text>
+            <Text style={[styles.value, { color: plan.autoRenew ? 'green' : 'red' }]}>
+              {plan.autoRenew ? 'Bật' : 'Đã tắt'}
+            </Text>
+
+            <Text style={styles.label}>Trạng thái:</Text>
+            <Text style={[styles.value, { color: isExpired(plan.nextRenewalDate) ? 'red' : 'green' }]}>
+              {isExpired(plan.nextRenewalDate) ? 'Hết hạn' : 'Còn hiệu lực'}
+            </Text>
           </View>
 
-          <View style={styles.balanceSection}>
-            <Text style={styles.balanceLabel}>Số dư ví</Text>
-            <Text style={styles.balanceAmount}>800,000đ</Text>
-          </View>
-        </View>
-        <View style={{ paddingInline: 20 }}>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.depositButton} onPress={() => navigation.navigate("StudentDepositScreen")}>
-              <Text style={styles.depositText}>▲ Nạp Tiền</Text>
+          {plan.autoRenew && (
+            <TouchableOpacity style={styles.cancelBtn} onPress={cancelAutoRenew}>
+              <Text style={styles.cancelText}>Huỷ Tự Động Gia Hạn</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.withdrawButton}>
-              <Text style={styles.withdrawText}>▼ Rút Tiền</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={styles.transactionSection}>
-            <Text style={styles.transactionTitle}>Lịch Sử Giao Dịch</Text>
-            <View style={styles.transactionItem}>
-              <View style={styles.iconWrapper}>
-                <Text style={styles.iconText}>$</Text>
-              </View>
-              <Icon name="arrow-up" size={20} color="#fff" style={styles.arrow} />
-              <View style={styles.transactionDetails}>
-                <Text style={styles.transactionDescription}>Nạp tiền vào ví</Text>
-                <Text style={styles.transactionDate}>Oct 14, 10:24 AM</Text>
-              </View>
-              <Text style={styles.transactionAmount}>+1,000,000đ</Text>
-            </View>
-            <View style={styles.transactionItem}>
-              <View style={styles.iconWrapper}>
-                <Text style={styles.iconText}>$</Text>
-              </View>
-              <Icon name="arrow-down" size={20} color="#fff" style={styles.arrow} />
-              <View style={styles.transactionDetails}>
-                <Text style={styles.transactionDescription}>Thanh toán học phí</Text>
-                <Text style={styles.transactionDate}>Oct 12, 02:13 PM</Text>
-              </View>
-              <Text style={styles.transactionAmount}>-800,000đ</Text>
-            </View>
-            <View style={styles.transactionItem}>
-              <View style={styles.iconWrapper}>
-                <Text style={styles.iconText}>$</Text>
-              </View>
-              <Icon name="arrow-down" size={20} color="#fff" style={styles.arrow} />
-              <View style={styles.transactionDetails}>
-                <Text style={styles.transactionDescription}>Thanh toán học phí</Text>
-                <Text style={styles.transactionDate}>Oct 11, 01:19 AM</Text>
-              </View>
-              <Text style={styles.transactionAmount}>-200,000đ</Text>
-            </View>
-            <View style={styles.transactionItem}>
-              <View style={styles.iconWrapper}>
-                <Text style={styles.iconText}>$</Text>
-              </View>
-              <Icon name="arrow-up" size={20} color="#fff" style={styles.arrow} />
-              <View style={styles.transactionDetails}>
-                <Text style={styles.transactionDescription}>Nạp tiền vào ví</Text>
-                <Text style={styles.transactionDate}>Oct 07, 09:10 PM</Text>
-              </View>
-              <Text style={styles.transactionAmount}>+2,000,000đ</Text>
-            </View>
-            <View style={styles.transactionItem}>
-              <View style={styles.iconWrapper}>
-                <Text style={styles.iconText}>$</Text>
-              </View>
-              <Icon name="arrow-down" size={20} color="#fff" style={styles.arrow} />
-              <View style={styles.transactionDetails}>
-                <Text style={styles.transactionDescription}>Thanh toán học phí</Text>
-                <Text style={styles.transactionDate}>Oct 04, 05:45 AM</Text>
-              </View>
-              <Text style={styles.transactionAmount}>-1,000,000đ</Text>
-            </View>
-          </View>
+          )}
+        </>
+      ) : (
+        <View style={styles.noPlanWrapper}>
+          <Text style={styles.noPlan}>Bạn chưa đăng ký gói nào.</Text>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('StudentPackageScreen')}
+            style={styles.upgradeButton}
+          >
+            <Text style={styles.upgradeText}>Đăng ký ngay</Text>
+          </TouchableOpacity>
         </View>
-      </View>
-    </StudentLayout>
+      )}
+      <StudentLayout navigation={navigation} />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
-    paddingBottom: 50,
+    backgroundColor: '#fff',
+    paddingTop: 60,
+    paddingHorizontal: 24,
+    paddingBottom: 20,
   },
-  header: {
-    height: 250,
-    backgroundColor: "#31B7EC",
-    borderRadius: 10,
+  backButton: {
+    position: 'absolute',
+    top: 20,
+    left: 20,
+    backgroundColor: '#eee',
+    padding: 8,
+    borderRadius: 20,
+    elevation: 4,
+    zIndex: 10,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+    color: '#31B7EC',
+  },
+  total: {
+    fontSize: 16,
+    textAlign: 'center',
     marginBottom: 20,
+    color: '#333',
+  },
+  card: {
+    backgroundColor: '#f2faff',
+    borderRadius: 16,
     padding: 20,
-    justifyContent: "space-between",
+    elevation: 3,
   },
-  topRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  backArrow: {
-    fontSize: 24,
-    color: "#fff",
-  },
-  notificationIcon: {
-    marginLeft: 20,
-  },
-  profile: {
-    flex: 1,
-    alignItems: "flex-end",
-  },
-  balanceSection: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-  },
-  balanceLabel: {
-    color: "#fff",
-    fontSize: 20,
-  },
-  balanceAmount: {
-    color: "#fff",
-    fontSize: 32,
-    fontWeight: "bold",
-  },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: "#fff",
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 20,
-  },
-  depositButton: {
-    backgroundColor: "#FFCA28",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    flex: 1,
-    marginRight: 10,
-  },
-  depositText: {
-    color: "#000",
+  label: {
     fontSize: 16,
-    fontWeight: "bold",
+    color: '#444',
+    marginTop: 10,
   },
-  withdrawButton: {
-    backgroundColor: "#31B7EC",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    flex: 1,
+  value: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 4,
   },
-  withdrawText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-  transactionSection: {},
-  transactionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
+  planName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#31B7EC',
     marginBottom: 10,
+    marginTop: 6,
   },
-  transactionItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
+  cancelBtn: {
+    marginTop: 30,
+    paddingVertical: 12,
+    backgroundColor: '#FF3B30',
+    borderRadius: 30,
+    alignItems: 'center',
   },
-  iconWrapper: {
-    width: 24,
-    height: 24,
-    backgroundColor: "#00C853",
-    borderRadius: 12,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 10,
+  cancelText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
-  iconText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "bold",
+  noPlanWrapper: {
+    alignItems: 'center',
+    marginTop: 40,
   },
-  arrow: {
-    marginRight: 10,
+  noPlan: {
+    fontSize: 18,
+    textAlign: 'center',
+    color: '#666',
+    marginBottom: 16,
   },
-  transactionDetails: {
-    flex: 1,
-    flexDirection: "column",
+  upgradeButton: {
+    backgroundColor: '#31B7EC',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 30,
   },
-  transactionDescription: {
-    fontSize: 14,
-  },
-  transactionDate: {
-    fontSize: 12,
-    color: "#666",
-  },
-  transactionAmount: {
-    fontWeight: "bold",
-    minWidth: 80,
-    textAlign: "right",
+  upgradeText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 

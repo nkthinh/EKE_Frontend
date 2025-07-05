@@ -15,7 +15,7 @@ const StudentLayout = ({ children, navigation }) => {
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentMessageScreen')}>
           <Icon name="chatbubble" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('LecturerFeedbackScreen')}>
+        <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentLecturerFeedbackScreen')}>
           <Icon name="medal" size={24} color="white" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => navigation.navigate('StudentProfileScreen')}>

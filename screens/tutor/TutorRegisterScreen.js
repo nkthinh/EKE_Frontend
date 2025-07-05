@@ -56,6 +56,8 @@ const TutorRegisterScreen = ({ navigation }) => {
                         navigation.navigate('AdminHome');
                     } else if (emailTrimmed === 'nhi' && passwordTrimmed === '123456') {
                         navigation.navigate('TutorHome');
+                    } else if (emailTrimmed === 'thinh' && passwordTrimmed === '123456') {
+                        navigation.navigate('StudentHomeScreen');
                     } else {
                         Alert.alert('Lỗi', 'Sai tài khoản hoặc mật khẩu');
                     }
