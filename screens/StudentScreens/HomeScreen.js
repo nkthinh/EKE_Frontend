@@ -14,6 +14,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { personData } from "../../data/personData";
 
+
 // Theme constants
 const theme = {
   colors: {

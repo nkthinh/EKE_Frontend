@@ -76,8 +76,13 @@ const OnboardingScreen2B = ({ navigation }) => (
 const OnboardingScreen3 = ({ navigation }) => {
    const handleRoleSelection = async (role) => {
     try {
+      if(role === "Lecturer") {
+        await AsyncStorage.setItem("userRole", role);
+      navigation.navigate("TutorRegister");
+      } else if(role === "Student") {
       await AsyncStorage.setItem("userRole", role);
       navigation.navigate("Login");
+      }
     } catch (error) {
       console.log("Error saving role:", error);
     }
