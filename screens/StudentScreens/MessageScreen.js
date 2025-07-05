@@ -47,7 +47,7 @@ const MessageScreen = ({ navigation }) => {
       <View style={styles.messages}>
         <Text style={styles.sectionTitle}>Tin Nhắn:</Text>
         {dummyMessages.map((message, index) => (
-          <TouchableOpacity style={styles.messageItem} key={index} onPress={() => navigation.navigate("DetailMessageScreen", { name: message.name })}
+          <TouchableOpacity style={styles.messageItem} key={index} onPress={() => navigation.navigate("StudentDetailMessageScreen", { name: message.name })}
           >
             <Image source={message.image} style={styles.messageImage} />
             <View style={styles.messageText}>

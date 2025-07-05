@@ -33,7 +33,7 @@ const WalletScreen = ({ navigation }) => {
         </View>
         <View style={{ paddingInline: 20 }}>
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.depositButton} onPress={() => navigation.navigate("DepositScreen")}>
+            <TouchableOpacity style={styles.depositButton} onPress={() => navigation.navigate("StudentDepositScreen")}>
               <Text style={styles.depositText}>▲ Nạp Tiền</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.withdrawButton}>

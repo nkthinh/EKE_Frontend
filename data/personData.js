@@ -26,7 +26,7 @@ export const personData = [
     university: "Đại học Kinh tế HCM",
     major: "Toán Cao Cấp",
     address: "45 Le Loi, Quan 1, Tp HCM",
-    teachingExperience: "Dạy Thêm Toán Cao Cấp, Hỗ Trợ Tiếng Nhật Cho Học Sinh, Lớp Python Cơ Bản",
+    teachingExperience: ["Dạy Thêm Toán Cao Cấp, Hỗ Trợ Tiếng Nhật Cho Học Sinh, Lớp Python Cơ Bản"],
     awards: ["Giải Nhì Cuộc Thi Toán Quốc Gia", "Chứng Chỉ Tiếng Nhật JLPT N3"],
     rating: { score: 4.6, reviews: 45 },
     skills: [
@@ -43,7 +43,7 @@ export const personData = [
     university: "Đại học Bách Khoa HCM",
     major: "Khoa Học Dữ Liệu",
     address: "72 Tran Hung Dao, Quan 5, Tp HCM",
-    teachingExperience: "Dạy Lập Trình C++ và Java, Hỗ Trợ Data Science, Lớp TOEIC 800",
+    teachingExperience: ["Dạy Lập Trình C++ và Java, Hỗ Trợ Data Science, Lớp TOEIC 800"],
     awards: ["Giải Nhất Cuộc Thi Lập Trình Quốc Gia", "Chứng Chỉ TOEIC 800"],
     rating: { score: 4.9, reviews: 68 },
     skills: [
