@@ -13,6 +13,27 @@ const UpgradeScreen = ({ navigation }) => {
     Diamond: '130000',
   });
 
+  const featuresByPlan = {
+    Silver: [
+      'Tăng giới hạn kết nối với Gia Sư lên 5 người',
+      'Xem đánh giá cơ bản của Gia Sư',
+      'Không quảng cáo',
+    ],
+    Gold: [
+      'Tăng giới hạn kết nối lên 15 Gia Sư',
+      'Ưu tiên hiển thị khi tìm kiếm',
+      'Xem đánh giá & phản hồi chi tiết',
+      'Không quảng cáo',
+    ],
+    Diamond: [
+      'Kết nối không giới hạn với Gia Sư',
+      'Ưu tiên cao nhất trong kết quả tìm kiếm',
+      'Tư vấn chọn Gia Sư 1-1 bởi hệ thống AI',
+      'Xem hồ sơ chi tiết & lịch sử hoạt động',
+      'Không quảng cáo',
+    ],
+  };
+
   useEffect(() => {
     const loadPrices = async () => {
       try {
@@ -78,12 +99,8 @@ const UpgradeScreen = ({ navigation }) => {
           </TouchableOpacity>
         ))}
 
-        <Text style={styles.featureHeader}>Tính Năng Bao Gồm</Text>
-        {[
-          'Tăng Giới Hạn Danh Sách Học Viên',
-          'Sử Dụng Trợ Lý Học Tập AI',
-          'Không Hiển Thị Quảng Cáo',
-        ].map((text, i) => (
+        <Text style={styles.featureHeader}>Tính Năng Gói {selected}</Text>
+        {featuresByPlan[selected].map((text, i) => (
           <View key={i} style={styles.feature}>
             <Text style={styles.featureText}>{text}</Text>
             <Icon name="check-circle" size={24} color="green" />
