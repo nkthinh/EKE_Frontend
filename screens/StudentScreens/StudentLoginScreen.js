@@ -1,4 +1,4 @@
-  import React, { useState } from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,12 +10,11 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
-import EKEImage from "../assets/EKE.jpg";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import EKEImage from "../../assets/EKE.jpg";
 import IIcon from "react-native-vector-icons/Ionicons";
-import { authService } from "../services";
+import { authService } from "../../services";
 
-export default function LoginScreen() {
+export default function StudentLoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,12 +29,12 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const response = await authService.login(email, password);
-      const { user } = response;
+      const { user } = response.data;
       
-      if (user.role === "Student") {
-        navigation.navigate("StudentHomeScreen");
-      } else if (user.role === "Tutor" || user.role === "Lecturer") {
-        navigation.navigate("TeacherHomeScreen");
+      if (user.role === 1) {
+        navigation.navigate("TutorHome");
+      } else {
+        Alert.alert("Lỗi", "Tài khoản này không phải là tài khoản học viên");
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -46,17 +45,18 @@ export default function LoginScreen() {
   };
 
   const handleRegisterRedirect = () => {
-    navigation.navigate("Register");
+    navigation.navigate("StudentRegister");
   };
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.navigate("Onboarding3")}>
+      <TouchableOpacity onPress={() => navigation.navigate("RoleSelection")}>
         <IIcon name="arrow-back" size={30} color="#ff4444" />
       </TouchableOpacity>
       <View style={styles.logoContainer}>
         <Image source={EKEImage} style={styles.logo} />
-        <Text style={styles.title}>Đăng Nhập</Text>
+        <Text style={styles.title}>Đăng Nhập Học Viên</Text>
+        <Text style={styles.subtitle}>Chào mừng trở lại!</Text>
       </View>
 
       <View style={styles.inputContainer}>
@@ -150,7 +150,12 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#28a745", // Green title
+    color: "#28a745",
+    marginBottom: 5,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
   },
   inputContainer: {
     marginBottom: 20,
@@ -190,6 +195,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  disabledButton: {
+    opacity: 0.6,
+  },
   forgotPassword: {
     color: "#007bff",
     textAlign: "center",
@@ -216,8 +224,5 @@ const styles = StyleSheet.create({
   footerText: {
     color: "#666",
     fontSize: 12,
-  },
-  disabledButton: {
-    opacity: 0.6,
   },
 });

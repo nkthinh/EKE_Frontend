@@ -14,7 +14,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { personData } from "../../data/personData";
 
-
 // Theme constants
 const theme = {
   colors: {
@@ -57,6 +56,10 @@ const assets = {
 };
 
 const ProfileCard = React.memo(({ profile, animatedStyle, translateX, isCurrent, navigation }) => {
+  const [imageError, setImageError] = useState(false);
+  
+  console.log("Profile image source:", profile.image);
+  console.log("Profile name:", profile.name);
   const likeOpacity = useAnimatedStyle(() => ({
     opacity: isCurrent ? interpolate(translateX.value, [0, -SWIPE_THRESHOLD], [0, 1]) : 0,
     transform: [{ rotate: "-30deg" }],
@@ -74,10 +77,15 @@ const ProfileCard = React.memo(({ profile, animatedStyle, translateX, isCurrent,
         activeOpacity={0.8}
       >
         <Image
-          source={profile.image || assets.defaultProfileImage}
+          source={imageError ? assets.defaultProfileImage : (profile.image || assets.defaultProfileImage)}
           style={styles.profileImage}
           defaultSource={assets.defaultProfileImage}
-          onError={(e) => console.log("Image load error:", e.nativeEvent.error)}
+          onError={(e) => {
+            console.log("Image load error for", profile.name, ":", e.nativeEvent.error);
+            setImageError(true);
+          }}
+          onLoad={() => console.log("Image loaded successfully for:", profile.name)}
+          resizeMode="cover"
         />
       </TouchableOpacity>
       {isCurrent && (
@@ -111,6 +119,9 @@ const ProfileCard = React.memo(({ profile, animatedStyle, translateX, isCurrent,
 
 const HomeScreen = ({ navigation, username = "User", greeting = "Hello" }) => {
   const { width } = Dimensions.get("window");
+  
+  console.log("personData imported:", personData);
+  console.log("personData length:", personData?.length);
 
   if (!personData || personData.length === 0) {
     return (

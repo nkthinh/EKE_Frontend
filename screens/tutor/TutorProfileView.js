@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import {
     View, Text, TextInput, TouchableOpacity,
-    StyleSheet, ScrollView, ActivityIndicator, Image
+    StyleSheet, ScrollView, ActivityIndicator, Image, Alert
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
+import { tutorService } from '../../services';
 
 const TABS = ['Cá Nhân', 'Chuyên Môn', 'Khác'];
 
@@ -13,14 +14,43 @@ const TutorProfileViewTabs = ({ navigation }) => {
     const [activeTab, setActiveTab] = useState('Cá Nhân');
     const [form, setForm] = useState(null);
     const [editing, setEditing] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        (async () => {
-            const json = await AsyncStorage.getItem('tutorProfile');
-            const data = json ? JSON.parse(json) : {};
-            setForm(data);
-        })();
+        loadProfile();
     }, []);
+
+    const loadProfile = async () => {
+        setLoading(true);
+        try {
+            const user = JSON.parse(await AsyncStorage.getItem('user') || '{}');
+            
+            if (user.id) {
+                try {
+                    // Try to load from API first
+                    const profileData = await tutorService.getTutorProfile(user.id);
+                    setForm(profileData);
+                } catch (apiError) {
+                    console.error('API Error:', apiError);
+                    // Fallback to AsyncStorage
+                    const json = await AsyncStorage.getItem('tutorProfile');
+                    const data = json ? JSON.parse(json) : {};
+                    setForm(data);
+                }
+            } else {
+                // No user ID, load from AsyncStorage
+                const json = await AsyncStorage.getItem('tutorProfile');
+                const data = json ? JSON.parse(json) : {};
+                setForm(data);
+            }
+        } catch (error) {
+            console.error('Error loading profile:', error);
+            setForm({});
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleChange = (key, value) => {
         if (!editing) return;
