@@ -30,7 +30,6 @@ import ChatListScreen from './screens/match/ChatListScreen';
 import ChatDetailScreen from './screens/match/ChatDetailScreen';
 import VideoCallScreen from './screens/match/VideoCallScreen';
 import HomeScreen from './screens/StudentScreens/HomeScreen';
-import TeacherHomeScreen from './screens/TeacherScreens/TeacherHomeScreen';
 import MessageScreen from './screens/StudentScreens/MessageScreen';
 import DetailMessageScreen from './screens/StudentScreens/DetailMessageScreen';
 import LecturerFeedbackScreen from './screens/StudentScreens/LecturerFeedbackScreen';
@@ -40,7 +39,9 @@ import UpdateProfile from './screens/StudentScreens/UpdateProfile';
 import DepositScreen from './screens/StudentScreens/DepositScreen';
 import LecturerDetailScreen from './screens/StudentScreens/LecturerDetailScreen';
 import LoginScreen from './screens/LoginScreen';
-import { OnboardingScreen1, OnboardingScreen2A, OnboardingScreen2B, OnboardingScreen3 } from './screens/OnBoardingScreens';
+import StudentLoginScreen from './screens/StudentScreens/StudentLoginScreen';
+import StudentRegisterScreen from './screens/StudentScreens/StudentRegisterScreen';
+import TutorLoginScreen from './screens/tutor/TutorLoginScreen';
 
 
 
@@ -56,6 +57,11 @@ export default function App() {
         <Stack.Screen name="Splash" component={SplashScreen} />
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+        
+        {/* Authentication */}
+        <Stack.Screen name="StudentLogin" component={StudentLoginScreen} />
+        <Stack.Screen name="StudentRegister" component={StudentRegisterScreen} />
+        <Stack.Screen name="TutorLogin" component={TutorLoginScreen} />
 
         {/* Tutor */}
         <Stack.Screen name="TutorRegister" component={TutorRegisterScreen} />
@@ -84,11 +90,6 @@ export default function App() {
         <Stack.Screen
           name="StudentHomeScreen"
           component={HomeScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="TeacherHomeScreen"
-          component={TeacherHomeScreen}
           options={{ headerShown: false }}
         />
         <Stack.Screen

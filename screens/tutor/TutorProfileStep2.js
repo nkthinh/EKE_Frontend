@@ -9,9 +9,11 @@ import {
     ScrollView,
     Dimensions,
     Platform,
+    Alert,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import * as ImagePicker from 'expo-image-picker';
+import { certificationService } from '../../services';
 
 const { width } = Dimensions.get('window');
 

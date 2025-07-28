@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,9 +9,11 @@ import {
     Dimensions,
     KeyboardAvoidingView,
     Platform,
+    Alert,
 } from 'react-native';
 import DropDownPicker from 'react-native-dropdown-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { subjectService, tutorService } from '../../services';
 
 const { width } = Dimensions.get('window');
 
@@ -21,13 +23,30 @@ const TutorProfileStep3 = ({ navigation, route }) => {
     const [subjects, setSubjects] = useState([
         { id: 1, subject: null, level: null, fee: '', subjectOpen: false, levelOpen: false }
     ]);
-
-    const allSubjects = [
+    const [allSubjects, setAllSubjects] = useState([
         'Toán', 'Văn (Tiếng Việt)', 'Vật Lý', 'Hóa Học', 'Sinh Học', 'Tin Học', 'Địa Lý', 'Lịch Sử',
         'Mỹ Thuật', 'Âm nhạc', 'Tiếng Trung', 'Tiếng Hàn', 'Tiếng Nhật', 'Tiếng Anh', 'Lập trình', 'Khác'
-    ];
+    ]);
+    const [loading, setLoading] = useState(false);
 
     const allLevels = ['Cấp 1', 'Cấp 2', 'Cấp 3', 'Đại học'];
+
+    useEffect(() => {
+        loadSubjects();
+    }, []);
+
+    const loadSubjects = async () => {
+        try {
+            const subjectsData = await subjectService.getAllSubjects();
+            if (subjectsData && subjectsData.length > 0) {
+                const subjectNames = subjectsData.map(subject => subject.name);
+                setAllSubjects(subjectNames);
+            }
+        } catch (error) {
+            console.error('Error loading subjects:', error);
+            // Keep default subjects if API fails
+        }
+    };
 
     const handleChange = (index, key, value) => {
         const updated = [...subjects];
@@ -55,14 +74,60 @@ const TutorProfileStep3 = ({ navigation, route }) => {
     };
 
     const handleFinish = async () => {
-        const fullProfile = {
-            ...step1Data,
-            ...step2Data,
-            description,
-            subjects,
-        };
-        await AsyncStorage.setItem('tutorProfile', JSON.stringify(fullProfile));
-        navigation.navigate('TutorHome');
+        setLoading(true);
+        try {
+            const fullProfile = {
+                ...step1Data,
+                ...step2Data,
+                description,
+                subjects,
+            };
+            
+            // Save to AsyncStorage for backup
+            await AsyncStorage.setItem('tutorProfile', JSON.stringify(fullProfile));
+            
+            // Get current user from storage
+            const user = JSON.parse(await AsyncStorage.getItem('user') || '{}');
+            
+            if (user.id) {
+                try {
+                    // Update tutor profile via API
+                    await tutorService.updateTutorProfile(user.id, {
+                        bio: description,
+                        subjects: subjects.map(s => ({
+                            subjectName: s.subject,
+                            level: s.level,
+                            hourlyRate: parseFloat(s.fee) || 0
+                        })).filter(s => s.subjectName && s.level),
+                        personalInfo: {
+                            name: step1Data.name,
+                            gender: step1Data.gender,
+                            dateOfBirth: step1Data.dob,
+                            phone: step1Data.phone,
+                            city: step1Data.city,
+                        },
+                        professionalInfo: {
+                            title: step2Data.title,
+                            organization: step2Data.organization,
+                            major: step2Data.major,
+                            teachingMethod: step2Data.teachingMethod,
+                        }
+                    });
+                    
+                    Alert.alert('Thành công', 'Hồ sơ đã được cập nhật thành công!');
+                } catch (apiError) {
+                    console.error('API Error:', apiError);
+                    Alert.alert('Thông báo', 'Hồ sơ đã được lưu tạm thời. Sẽ đồng bộ khi có kết nối.');
+                }
+            }
+            
+            navigation.navigate('TutorHome');
+        } catch (error) {
+            console.error('Error saving profile:', error);
+            Alert.alert('Lỗi', 'Không thể lưu hồ sơ. Vui lòng thử lại.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -162,10 +227,13 @@ const TutorProfileStep3 = ({ navigation, route }) => {
                             <Text style={styles.buttonText}>Quay lại</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.nextButton}
+                            style={[styles.nextButton, loading && styles.disabledButton]}
                             onPress={handleFinish}
+                            disabled={loading}
                         >
-                            <Text style={styles.buttonText}>Hoàn Thành</Text>
+                            <Text style={styles.buttonText}>
+                                {loading ? 'Đang xử lý...' : 'Hoàn Thành'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -290,6 +358,9 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 18,
+    },
+    disabledButton: {
+        opacity: 0.6,
     },
 });
 

@@ -13,9 +13,9 @@ const { width } = Dimensions.get('window');
 const RoleSelectionScreen = ({ navigation }) => {
     const handleSelectRole = (role) => {
         if (role === 'Gia sư') {
-            navigation.navigate('PolicyScreen');
+            navigation.navigate('TutorLogin');
         } else {
-            navigation.navigate('CustomerProfile');
+            navigation.navigate('StudentLogin');
         }
     };
 

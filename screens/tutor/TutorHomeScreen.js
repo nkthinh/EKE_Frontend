@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View, Text, Image, StyleSheet, TextInput, TouchableOpacity,
-    FlatList, Dimensions, Modal
+    FlatList, Dimensions, Modal, ActivityIndicator
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
@@ -9,12 +9,18 @@ import BottomMenu from '../components/BottomMenu';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import { tutorService, notificationService } from '../../services';
 
-const tutors = Array(9).fill({
-    name: 'Nguyễn Thị Thảo',
-    age: 22,
+const defaultTutors = Array(9).fill({
+    id: 1,
+    fullName: 'Nguyễn Thị Thảo',
+    university: 'Đại học Sư phạm',
+    major: 'Toán học',
     address: '13/28 Nguyễn Huệ, Tân Bình, Tp HCM',
     image: require('../../assets/avatar.png'),
+    averageRating: 4.8,
+    hourlyRate: 150000,
+    experienceYears: 2,
 });
 
 const TutorHomeScreen = ({ navigation }) => {
@@ -25,6 +31,13 @@ const TutorHomeScreen = ({ navigation }) => {
     const [minAge, setMinAge] = useState(5);
     const [maxAge, setMaxAge] = useState(30);
     const [userName, setUserName] = useState('Gia Sư');
+    const [tutors, setTutors] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+    useEffect(() => {
+        loadData();
+    }, []);
 
     useFocusEffect(
         useCallback(() => {
@@ -33,20 +46,79 @@ const TutorHomeScreen = ({ navigation }) => {
                 if (storedName) setUserName(storedName);
             };
             getName();
+            loadNotifications();
         }, [])
     );
 
+    const loadData = async () => {
+        setLoading(true);
+        try {
+            // Fetch tutors from API
+            const response = await tutorService.searchTutors({
+                page: 1,
+                pageSize: 20,
+                sortBy: 'AverageRating',
+                sortOrder: 'DESC'
+            });
+            
+            if (response.success && response.data) {
+                // Transform API response to match component format
+                const tutorList = response.data.map(tutor => ({
+                    id: tutor.id,
+                    fullName: tutor.fullName,
+                    university: tutor.university || 'Chưa cập nhật',
+                    major: tutor.major || 'Chưa cập nhật',
+                    address: tutor.city && tutor.district ? `${tutor.district}, ${tutor.city}` : 'Chưa cập nhật',
+                    image: tutor.profileImage ? { uri: tutor.profileImage } : require('../../assets/avatar.png'),
+                    averageRating: tutor.averageRating || 0,
+                    hourlyRate: tutor.hourlyRate || 0,
+                    experienceYears: tutor.experienceYears || 0,
+                    ratingDisplay: tutor.ratingDisplay || 'Chưa có đánh giá',
+                    hourlyRateText: tutor.hourlyRateText || 'Thỏa thuận',
+                    experienceText: tutor.experienceText || 'Mới bắt đầu'
+                }));
+                setTutors(tutorList.length > 0 ? tutorList : defaultTutors);
+            } else {
+                setTutors(defaultTutors);
+            }
+        } catch (error) {
+            console.error('Error loading tutors:', error);
+            setTutors(defaultTutors);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadNotifications = async () => {
+        try {
+            const notifications = await notificationService.getUnreadNotifications();
+            setUnreadNotifications(notifications.length);
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        }
+    };
+
     const renderItem = ({ item }) => (
-        <TouchableOpacity onPress={() => navigation.navigate('ChatDetailScreen', { name: item.name })}>
+        <TouchableOpacity onPress={() => navigation.navigate('TutorProfileView', { tutorId: item.id })}>
             <View style={styles.card}>
                 <Image source={item.image} style={styles.image} />
                 <View style={styles.bottomOverlay}>
                     <Text style={styles.name}>
-                        {item.name} <Text style={styles.age}>{item.age}</Text>
+                        {item.fullName}
+                    </Text>
+                    <Text style={styles.university}>
+                        🎓 {item.university}
+                    </Text>
+                    <Text style={styles.major}>
+                        📚 {item.major}
                     </Text>
                     <Text style={styles.address}>
-                        <Icon name="map-marker" size={20} color="#fff" /> {item.address}
+                        <Icon name="map-marker" size={16} color="#fff" /> {item.address}
                     </Text>
+                    <View style={styles.statsRow}>
+                        <Text style={styles.rating}>⭐ {item.ratingDisplay}</Text>
+                        <Text style={styles.hourlyRate}>{item.hourlyRateText}</Text>
+                    </View>
                 </View>
             </View>
         </TouchableOpacity>
@@ -71,7 +143,13 @@ const TutorHomeScreen = ({ navigation }) => {
                         <TouchableOpacity onPress={() => navigation.navigate('NotificationScreen')}>
                             <View style={styles.bellWrapper}>
                                 <Icon name="bell-outline" size={28} color="#F5A623" />
-                                <View style={styles.dot} />
+                                {unreadNotifications > 0 && (
+                                    <View style={styles.notificationBadge}>
+                                        <Text style={styles.notificationText}>
+                                            {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                                        </Text>
+                                    </View>
+                                )}
                             </View>
                         </TouchableOpacity>
 
@@ -86,13 +164,22 @@ const TutorHomeScreen = ({ navigation }) => {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={tutors}
-                renderItem={renderItem}
-                keyExtractor={(item, index) => index.toString()}
-                numColumns={2}
-                contentContainerStyle={styles.list}
-            />
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#31B7EC" />
+                    <Text style={styles.loadingText}>Đang tải danh sách gia sư...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={tutors}
+                    renderItem={renderItem}
+                    keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+                    numColumns={2}
+                    contentContainerStyle={styles.list}
+                    refreshing={loading}
+                    onRefresh={loadData}
+                />
+            )}
 
             <BottomMenu navigation={navigation} />
 
@@ -264,7 +351,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         overflow: 'hidden',
         width: cardWidth,
-        height: 250,
+        height: 280,
         backgroundColor: '#000',
         elevation: 3,
         shadowColor: '#000',
@@ -390,6 +477,58 @@ const styles = StyleSheet.create({
         color: '#555',
         marginBottom: 4,
         marginTop: 8,
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#666',
+    },
+    notificationBadge: {
+        position: 'absolute',
+        top: -5,
+        right: -5,
+        backgroundColor: 'red',
+        borderRadius: 10,
+        minWidth: 20,
+        height: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    notificationText: {
+        color: 'white',
+        fontSize: 12,
+        fontWeight: 'bold',
+    },
+    university: {
+        fontSize: 14,
+        color: '#ddd',
+        marginTop: 2,
+    },
+    major: {
+        fontSize: 14,
+        color: '#ddd',
+        marginTop: 2,
+    },
+    statsRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: 4,
+    },
+    rating: {
+        fontSize: 13,
+        color: '#FFD700',
+        fontWeight: 'bold',
+    },
+    hourlyRate: {
+        fontSize: 13,
+        color: '#4CAF50',
+        fontWeight: 'bold',
     },
 
 });

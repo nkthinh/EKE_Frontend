@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -14,6 +14,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { Picker } from '@react-native-picker/picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { locationService } from '../../services';
 const { width } = Dimensions.get('window');
 
 const TutorProfileStep1 = ({ navigation }) => {
@@ -28,6 +29,21 @@ const TutorProfileStep1 = ({ navigation }) => {
     });
 
     const [errors, setErrors] = useState({});
+    const [provinces, setProvinces] = useState([]);
+    const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        loadProvinces();
+    }, []);
+
+    const loadProvinces = async () => {
+        try {
+            const provincesData = await locationService.getProvinces();
+            setProvinces(provincesData);
+        } catch (error) {
+            console.error('Error loading provinces:', error);
+        }
+    };
 
     const handleChange = (key, value) => {
         setForm({ ...form, [key]: value });
@@ -138,11 +154,21 @@ const TutorProfileStep1 = ({ navigation }) => {
             {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
 
             <Text style={styles.label}>Tỉnh/Thành Phố</Text>
-            <TextInput
-                style={[styles.input, errors.city && styles.errorInput]}
-                value={form.city}
-                onChangeText={(t) => handleChange('city', t)}
-            />
+            <View style={[styles.pickerWrapper, errors.city && styles.errorInput]}>
+                <Picker
+                    selectedValue={form.city}
+                    onValueChange={(value) => handleChange('city', value)}
+                >
+                    <Picker.Item label="Chọn tỉnh/thành phố" value="" />
+                    {provinces.map((province) => (
+                        <Picker.Item 
+                            key={province.id} 
+                            label={province.name} 
+                            value={province.name} 
+                        />
+                    ))}
+                </Picker>
+            </View>
             {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
 
             <TouchableOpacity style={styles.button} onPress={handleNext}>
