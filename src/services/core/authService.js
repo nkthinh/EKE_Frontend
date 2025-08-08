@@ -15,7 +15,6 @@ class AuthService extends ApiService {
   // Helper method để lưu token và user data từ response
   async saveAuthDataFromResponse(response) {
     try {
-      console.log("🔍 === SAVE AUTH DATA FROM RESPONSE ===");
       console.log("📥 Full response:", JSON.stringify(response, null, 2));
       console.log(
         "🔑 response.accessToken:",
