@@ -1,16 +1,24 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Alert } from "react-native";
 import matchService from "../services/features/matchService";
 import messageService from "../services/features/messageService";
+import conversationService from "../services/features/conversationService";
 import { useAuth } from "./useAuth";
 import { isTutor } from "../utils/navigation";
+import { useGlobalState } from "./useGlobalState";
 
 export const useMatch = () => {
+  const { userData } = useAuth();
+  const {
+    triggerConversationRefresh,
+    likedStudents: globalLikedStudents,
+    updateLikedStudents: updateGlobalLikedStudents,
+    preFetchLikedStudents,
+  } = useGlobalState();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [matches, setMatches] = useState([]);
   const [likedStudents, setLikedStudents] = useState([]);
-  const [error, setError] = useState(null);
-  const { userData } = useAuth();
 
   // ==================== NEW SWIPE ACTION FLOW ====================
 
@@ -88,45 +96,65 @@ export const useMatch = () => {
 
   // Tutor gets list of students who liked them
   const fetchLikedStudents = useCallback(async () => {
-    // Check for both string and number role values
-    const isTutorUser = isTutor(userData?.role);
-
-    if (!userData?.id || !isTutorUser) {
-      console.log("⚠️ Not a tutor or no user ID:", {
-        userId: userData?.id,
-        userRole: userData?.role,
-        isTutor: isTutorUser,
-      });
-      return;
+    if (!userData?.id || !isTutor(userData?.role)) {
+      console.log("⚠️ Not a tutor or no user ID, skipping fetch");
+      return [];
     }
-
-    console.log("🔍 Fetching liked students for tutor:", userData.id);
-    console.log("👤 User role:", userData.role);
 
     setLoading(true);
     setError(null);
 
     try {
+      console.log("🔍 Fetching liked students for tutor:", userData.id);
       const result = await matchService.tutorMatchWorkflow(userData.id);
-      console.log("📥 API Response:", JSON.stringify(result, null, 2));
 
-      if (result && result.likedStudents) {
-        console.log("✅ Setting liked students:", result.likedStudents.length);
-        setLikedStudents(result.likedStudents);
-      } else {
-        console.log("⚠️ No likedStudents in response, setting empty array");
-        setLikedStudents([]);
+      // Handle different response structures
+      let likedStudentsData = [];
+
+      if (result && result.success && Array.isArray(result.data)) {
+        likedStudentsData = result.data;
+      } else if (result && Array.isArray(result)) {
+        likedStudentsData = result;
+      } else if (
+        result &&
+        result.likedStudents &&
+        Array.isArray(result.likedStudents)
+      ) {
+        likedStudentsData = result.likedStudents;
       }
+
+      console.log("📥 Liked students fetched:", likedStudentsData.length);
+      setLikedStudents(likedStudentsData);
+
+      // Also update global state
+      updateGlobalLikedStudents(likedStudentsData);
 
       return result;
     } catch (err) {
       console.error("❌ Fetch liked students error:", err);
       setError(err.message);
-      setLikedStudents([]);
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
-  }, [userData?.id, userData?.role]);
+  }, [userData?.id, updateGlobalLikedStudents]);
+
+  // Pre-fetch liked students (for use in other components)
+  const preFetchLikedStudentsForTutor = useCallback(async () => {
+    if (!userData?.id || !isTutor(userData?.role)) {
+      console.log("⚠️ Not a tutor or no user ID, skipping pre-fetch");
+      return [];
+    }
+
+    try {
+      console.log("🚀 Pre-fetching liked students for tutor...");
+      const result = await preFetchLikedStudents(userData);
+      return result;
+    } catch (error) {
+      console.error("❌ Pre-fetch liked students error:", error);
+      return [];
+    }
+  }, [userData, preFetchLikedStudents]);
 
   // Tutor responds to student's like (accept/reject)
   const handleTutorResponse = useCallback(
@@ -386,6 +414,331 @@ export const useMatch = () => {
     }
   }, []);
 
+  // ==================== CONVERSATION & MESSAGING ====================
+
+  // Create conversation from match
+  const createConversationFromMatch = useCallback(async (matchData) => {
+    try {
+      console.log("🔍 Creating conversation from match in hook:", matchData);
+
+      // Extract matchId from the data
+      const matchId = matchData.matchId || matchData.id;
+
+      if (!matchId) {
+        throw new Error("matchId is required for conversation creation");
+      }
+
+      const result = await conversationService.createConversationFromMatch(
+        matchId
+      );
+      console.log("📥 Conversation creation result:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ Create conversation from match error:", error);
+      return { success: false, error: error.message };
+    }
+  }, []);
+
+  // Get conversation by user ID
+  const getConversationByUserId = useCallback(async (userId) => {
+    if (!userId) {
+      console.log("⚠️ No user ID provided");
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Getting conversation for user:", userId);
+      const result = await messageService.getConversationByUserId(userId);
+
+      console.log("📥 User conversation:", result);
+
+      return result;
+    } catch (err) {
+      console.error("❌ Get user conversation error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get conversation by conversation ID
+  const getConversationById = useCallback(async (conversationId) => {
+    if (!conversationId) {
+      console.log("⚠️ No conversation ID provided");
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Getting conversation by ID:", conversationId);
+      const result = await messageService.getConversationById(conversationId);
+
+      console.log("📥 Conversation details:", result);
+
+      return result;
+    } catch (err) {
+      console.error("❌ Get conversation by ID error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Send message (senderId is user ID from login response)
+  const sendMessage = useCallback(
+    async (messageData) => {
+      if (!userData?.id) {
+        Alert.alert("Error", "User data not available");
+        return { success: false };
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Ensure senderId is set to current user ID
+        const messageWithSender = {
+          ...messageData,
+          senderId: userData.id,
+        };
+
+        console.log("🔍 Sending message:", messageWithSender);
+        const result = await messageService.sendMessage(messageWithSender);
+
+        console.log("📥 Message sent:", result);
+
+        return {
+          success: true,
+          message: result,
+        };
+      } catch (err) {
+        console.error("❌ Send message error:", err);
+        Alert.alert("Error", "Failed to send message. Please try again.");
+        setError(err.message);
+        return { success: false, error: err.message };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userData?.id]
+  );
+
+  // Get messages in conversation
+  const getConversationMessages = useCallback(async (conversationId) => {
+    if (!conversationId) {
+      console.log("⚠️ No conversation ID provided");
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Getting messages for conversation:", conversationId);
+      const result = await messageService.getConversationMessages(
+        conversationId
+      );
+
+      console.log("📥 Conversation messages:", result);
+
+      return result;
+    } catch (err) {
+      console.error("❌ Get conversation messages error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // ==================== ENHANCED TUTOR RESPONSE ====================
+
+  // Enhanced tutor response that creates conversation after accepting
+  const handleTutorResponseWithConversation = useCallback(
+    async (studentId, action, onConversationCreated) => {
+      console.log("🔍 === HANDLE TUTOR RESPONSE WITH CONVERSATION DEBUG ===");
+      console.log("📥 Input parameters:");
+      console.log("   studentId:", studentId, "(type:", typeof studentId, ")");
+      console.log("   action:", action);
+      console.log(
+        "   userData.id:",
+        userData?.id,
+        "(type:",
+        typeof userData?.id,
+        ")"
+      );
+
+      if (!userData?.id) {
+        Alert.alert("Error", "User data not available");
+        return { success: false };
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log("🔍 Calling tutorRespondToLike with:");
+        console.log(
+          "   tutorUserId:",
+          userData.id,
+          "(type:",
+          typeof userData.id,
+          ")"
+        );
+        console.log(
+          "   studentId:",
+          studentId,
+          "(type:",
+          typeof studentId,
+          ")"
+        );
+        console.log("   action:", action);
+
+        const result = await matchService.tutorRespondToLike(
+          userData.id,
+          studentId,
+          action
+        );
+
+        console.log("📥 tutorRespondToLike result:", result);
+
+        if (result.type === "match_created") {
+          // Create conversation after successful match
+          console.log("🎉 Match created, creating conversation...");
+          console.log("📥 Match result:", result);
+
+          // Extract the correct matchId and tutorId from the response
+          const matchData = result.match || result;
+          const matchId = matchData.matchId || matchData.id;
+          const tutorId = matchData.tutorId || result.tutorId;
+
+          console.log("🔍 Extracted data:");
+          console.log("   matchId:", matchId);
+          console.log("   tutorId:", tutorId);
+          console.log("   studentId:", studentId);
+
+          // Validate required data
+          if (!matchId) {
+            console.error("❌ No matchId found in response");
+            return {
+              success: true,
+              match: result.match,
+              type: "match_created_no_conversation",
+              error: "No matchId found in response",
+            };
+          }
+
+          if (!tutorId) {
+            console.error("❌ No tutorId found in response");
+            return {
+              success: true,
+              match: result.match,
+              type: "match_created_no_conversation",
+              error: "No tutorId found in response",
+            };
+          }
+
+          // Prepare conversation data according to API specification
+          // Now using GET request, we only need matchId
+          const conversationData = {
+            matchId: matchId,
+          };
+
+          console.log(
+            "📤 Creating conversation with GET request, matchId:",
+            matchId
+          );
+
+          const conversationResult = await createConversationFromMatch(
+            conversationData
+          );
+
+          if (conversationResult.success) {
+            console.log(
+              "✅ Conversation created successfully:",
+              conversationResult.conversation
+            );
+
+            // Call callback to refresh conversation list
+            if (
+              onConversationCreated &&
+              typeof onConversationCreated === "function"
+            ) {
+              console.log("🔄 Triggering conversation list refresh...");
+              onConversationCreated(conversationResult.conversation);
+            }
+
+            // Also trigger global conversation refresh
+            triggerConversationRefresh();
+
+            // Return success with conversation data for navigation
+            return {
+              success: true,
+              match: result.match,
+              conversation: conversationResult.conversation,
+              type: "match_created_with_conversation",
+            };
+          } else {
+            console.log(
+              "⚠️ Match created but conversation failed:",
+              conversationResult.error
+            );
+            return {
+              success: true,
+              match: result.match,
+              type: "match_created_no_conversation",
+            };
+          }
+        } else if (result.type === "already_accepted") {
+          // Student already accepted, refresh list and show message
+          console.log("✅ Student already accepted, refreshing list...");
+          await fetchLikedStudents();
+          return { success: true, type: "already_accepted" };
+        } else if (result.type === "already_rejected") {
+          // Student already rejected, refresh list and show message
+          console.log("✅ Student already rejected, refreshing list...");
+          await fetchLikedStudents();
+          return { success: true, type: "already_rejected" };
+        } else {
+          await fetchLikedStudents(); // Refresh liked students list
+          return { success: true, type: "processed" };
+        }
+      } catch (err) {
+        console.error("❌ Tutor response error:", err);
+        setError(err.message);
+        return { success: false, error: err.message };
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      userData?.id,
+      fetchLikedStudents,
+      createConversationFromMatch,
+      triggerConversationRefresh,
+    ]
+  );
+
+  // Get conversations by user ID
+  const getConversationsByUserId = useCallback(async (userId) => {
+    try {
+      console.log("🔍 Getting conversations by user ID in hook:", userId);
+      const result = await conversationService.getConversationsByUserId(userId);
+      console.log("📥 Conversations by user ID result:", result);
+      return result;
+    } catch (error) {
+      console.error("❌ Get conversations by user ID error:", error);
+      return { success: false, error: error.message };
+    }
+  }, []);
+
   return {
     loading,
     error,
@@ -397,7 +750,16 @@ export const useMatch = () => {
     startConversation,
     handleStudentSwipe,
     fetchLikedStudents,
+    preFetchLikedStudentsForTutor,
     handleTutorResponse,
     fetchMatches,
+    // New conversation and messaging methods
+    createConversationFromMatch,
+    getConversationByUserId,
+    getConversationById,
+    sendMessage,
+    getConversationMessages,
+    handleTutorResponseWithConversation,
+    getConversationsByUserId,
   };
 };

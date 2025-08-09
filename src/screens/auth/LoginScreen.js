@@ -18,12 +18,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { authService } from "../../services";
 import { navigateToHomeByRole } from "../../utils/navigation";
 import Input from "../../components/common/Input";
+import { useAuth } from "../../hooks/useAuth";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigation = useNavigation();
+  const { login: authLogin } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -34,10 +36,29 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       const response = await authService.login(email, password);
-      const { user } = response;
+      console.log("🔐 Login response:", response);
 
-      // Use utility function for consistent navigation
-      navigateToHomeByRole(navigation, user.role, "LoginScreen");
+      // Extract user and token from response
+      const user = response.user || response;
+      const token = response.accessToken || response.token;
+
+      console.log("🔐 Extracted user:", user);
+      console.log("🔐 Extracted token:", token);
+
+      if (!user || !token) {
+        throw new Error("Invalid login response - missing user or token");
+      }
+
+      // Use useAuth login method which includes pre-fetching liked students
+      const loginSuccess = await authLogin(token, user, user.role);
+
+      if (loginSuccess) {
+        console.log("✅ Login successful, navigating to home...");
+        // Use utility function for consistent navigation
+        navigateToHomeByRole(navigation, user.role, "LoginScreen");
+      } else {
+        throw new Error("Failed to complete login process");
+      }
     } catch (error) {
       console.error("Login error:", error);
       Alert.alert("Lỗi đăng nhập", error.message || "Đăng nhập thất bại");

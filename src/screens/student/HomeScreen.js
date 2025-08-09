@@ -178,15 +178,16 @@ const ProfileCard = React.memo(
                 <Text style={styles.profileName}>
                   {profile.fullName || profile.name || "Không có tên"}
                 </Text>
-                {profile.birthYear && (
-                  <Text style={styles.profileAge}>
-                    {new Date().getFullYear() - profile.birthYear} tuổi
-                  </Text>
-                )}
+                {Number.isFinite(profile?.birthYear) &&
+                  profile.birthYear > 0 && (
+                    <Text style={styles.profileAge}>
+                      {new Date().getFullYear() - profile.birthYear} tuổi
+                    </Text>
+                  )}
               </View>
 
               <View style={styles.detailsContainer}>
-                {profile.university && (
+                {Boolean(profile?.university) && (
                   <View style={styles.detailRow}>
                     <Ionicons
                       name="school"
@@ -197,7 +198,7 @@ const ProfileCard = React.memo(
                   </View>
                 )}
 
-                {profile.major && (
+                {Boolean(profile?.major) && (
                   <View style={styles.detailRow}>
                     <Ionicons
                       name="book"
@@ -208,7 +209,7 @@ const ProfileCard = React.memo(
                   </View>
                 )}
 
-                {profile.totalReviews && (
+                {Number(profile?.totalReviews) > 0 && (
                   <View style={styles.detailRow}>
                     <Ionicons
                       name="people"
@@ -535,7 +536,7 @@ const HomeScreen = ({ navigation }) => {
             await authService.logout();
             navigation.reset({
               index: 0,
-              routes: [{ name: "StudentLogin" }],
+              routes: [{ name: "Splash" }],
             });
           } catch (error) {
             console.error("Logout error:", error);

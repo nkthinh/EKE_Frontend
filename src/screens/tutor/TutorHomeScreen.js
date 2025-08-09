@@ -21,6 +21,7 @@ import { tutorService, notificationService } from "../../services";
 import { useAuth } from "../../hooks/useAuth";
 import { useMatch } from "../../hooks/useMatch";
 import { isTutor } from "../../utils/navigation";
+import { useGlobalState } from "../../hooks/useGlobalState";
 
 const defaultTutors = Array(9).fill({
   id: 1,
@@ -45,18 +46,48 @@ const TutorHomeScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { userData } = useAuth();
-  const { likedStudents, fetchLikedStudents } = useMatch();
+  const { likedStudents, fetchLikedStudents, preFetchLikedStudentsForTutor } =
+    useMatch();
+  const { likedStudents: globalLikedStudents } = useGlobalState();
+
+  // Use global liked students if available, otherwise use local
+  const displayLikedStudents =
+    globalLikedStudents.length > 0 ? globalLikedStudents : likedStudents;
 
   // Lấy thông tin user từ đăng nhập
   const userName = userData?.fullName || "Gia Sư";
 
   useEffect(() => {
     loadData();
-    // Load liked students for tutor
-    if (isTutor(userData?.role)) {
-      fetchLikedStudents();
-    }
   }, []);
+
+  // Load liked students when userData is available
+  useEffect(() => {
+    console.log("🔄 TutorHomeScreen useEffect triggered");
+    console.log("👤 userData:", userData);
+    console.log("👨‍🏫 userData?.role:", userData?.role);
+    console.log("🆔 userData?.id:", userData?.id);
+    console.log("✅ isTutor(userData?.role):", isTutor(userData?.role));
+
+    if (userData?.id && isTutor(userData?.role)) {
+      console.log("🚀 TutorHomeScreen: Loading liked students for tutor...");
+      console.log("👤 User ID:", userData.id);
+      console.log("👨‍🏫 User Role:", userData.role);
+      preFetchLikedStudentsForTutor();
+    } else {
+      console.log("⚠️ TutorHomeScreen: Cannot fetch liked students");
+      console.log("❌ userData?.id:", userData?.id);
+      console.log("❌ isTutor(userData?.role):", isTutor(userData?.role));
+    }
+  }, [userData?.id, userData?.role, preFetchLikedStudentsForTutor]);
+
+  // Debug liked students data
+  useEffect(() => {
+    console.log("📊 === LIKED STUDENTS DEBUG ===");
+    console.log("📊 likedStudents length:", likedStudents.length);
+    console.log("📊 likedStudents data:", likedStudents);
+    console.log("📊 Global liked students:", globalLikedStudents);
+  }, [likedStudents, globalLikedStudents]);
 
   useFocusEffect(
     useCallback(() => {
@@ -192,15 +223,15 @@ const TutorHomeScreen = ({ navigation }) => {
             <Icon name="heart" size={24} color="#FF6B6B" />
             <Text style={styles.likedStudentsTitle}>Học sinh quan tâm</Text>
             <Text style={styles.likedStudentsSubtitle}>
-              {likedStudents.length} học sinh đã swipe bạn
+              {displayLikedStudents.length} học sinh đã swipe bạn
             </Text>
           </View>
           <View style={styles.likedStudentsRight}>
             <Icon name="chevron-right" size={24} color="#31B7EC" />
-            {likedStudents.length > 0 && (
+            {displayLikedStudents.length > 0 && (
               <View style={styles.likedStudentsBadge}>
                 <Text style={styles.likedStudentsBadgeText}>
-                  {likedStudents.length}
+                  {displayLikedStudents.length}
                 </Text>
               </View>
             )}
@@ -218,7 +249,7 @@ const TutorHomeScreen = ({ navigation }) => {
           data={tutors}
           renderItem={renderItem}
           keyExtractor={(item, index) =>
-            item.id?.toString() || index.toString()
+            `tutor-${item.id || index}-${Date.now()}`
           }
           numColumns={2}
           contentContainerStyle={styles.list}

@@ -5,6 +5,7 @@ import {
   setUserRole,
   setRefreshToken,
   clearUserData,
+  STORAGE_KEYS,
 } from "../../utils/storage";
 
 class AuthService extends ApiService {
@@ -368,7 +369,15 @@ class AuthService extends ApiService {
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
+      // Clear all user data and tokens
       await clearUserData();
+      await AsyncStorage.multiRemove([
+        "accessToken",
+        "refreshToken",
+        STORAGE_KEYS.USER_DATA,
+        STORAGE_KEYS.USER_ROLE,
+      ]);
+      console.log("AuthService - Logout completed, all data cleared");
     }
   }
 

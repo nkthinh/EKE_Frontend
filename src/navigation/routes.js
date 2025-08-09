@@ -20,6 +20,7 @@ export const ROUTES = {
   TUTOR_PROFILE_STEP2: "TutorProfileStep2",
   TUTOR_PROFILE_STEP3: "TutorProfileStep3",
   TUTOR_HOME: "TutorHome",
+  TUTOR_MESSAGE: "TutorMessage",
   RATE_SCREEN: "RateScreen",
   TUTOR_PROFILE: "TutorProfile",
   UPGRADE_SCREEN: "UpgradeScreen",
@@ -52,6 +53,12 @@ export const ROUTES = {
   CHAT_LIST: "ChatList",
   CHAT_DETAIL: "ChatDetail",
   VIDEO_CALL: "VideoCall",
+
+  // Test Screens
+  TEST_CONVERSATION_FLOW: "TestConversationFlow",
+  TEST_NAVIGATION: "TestNavigation",
+  TEST_MATCH_CONVERSATION: "TestMatchConversation",
+  TEST_CONVERSATIONS_BY_USER: "TestConversationsByUser",
 };
 
 // Route groups for better organization
@@ -73,6 +80,7 @@ export const ROUTE_GROUPS = {
     ROUTES.TUTOR_PROFILE_STEP2,
     ROUTES.TUTOR_PROFILE_STEP3,
     ROUTES.TUTOR_HOME,
+    ROUTES.TUTOR_MESSAGE,
     ROUTES.RATE_SCREEN,
     ROUTES.TUTOR_PROFILE,
     ROUTES.UPGRADE_SCREEN,

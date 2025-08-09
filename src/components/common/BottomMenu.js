@@ -22,12 +22,6 @@ const BottomMenu = ({ navigation, activeTab, userRole }) => {
       screen: isTutorUser ? "TutorMessage" : "StudentMessage",
     },
     {
-      id: "chat",
-      title: "Chat",
-      icon: "chatbubbles-outline",
-      screen: "ChatList",
-    },
-    {
       id: "profile",
       title: "Cá nhân",
       icon: "person-outline",
@@ -41,7 +35,13 @@ const BottomMenu = ({ navigation, activeTab, userRole }) => {
       console.log("👤 User role:", userRole);
       console.log("🎯 Navigating to:", screen);
       console.log("👨‍🏫 Is tutor:", isTutorUser);
-      navigation.navigate(screen);
+      console.log("📱 Active tab:", activeTab);
+
+      try {
+        navigation.navigate(screen);
+      } catch (error) {
+        console.error("❌ Navigation error:", error);
+      }
     }
   };
 
@@ -74,6 +74,11 @@ const BottomMenu = ({ navigation, activeTab, userRole }) => {
 
 const styles = StyleSheet.create({
   container: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: "100%",
     flexDirection: "row",
     backgroundColor: "#fff",
     borderTopWidth: 1,
@@ -85,6 +90,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
+    zIndex: 50,
   },
   menuItem: {
     flex: 1,

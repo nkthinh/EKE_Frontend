@@ -1,17 +1,21 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Image,
   Dimensions,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   ScrollView,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import { authService } from "../../services";
+import Input from "../../components/common/Input";
 import { getUserRole } from "../../utils/storage";
 
 const { width } = Dimensions.get("window");
@@ -39,6 +43,7 @@ const TutorSignupScreen = ({ navigation, route }) => {
 
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
   const subjects = [
     { id: 1, name: "Toán học" },
@@ -53,8 +58,29 @@ const TutorSignupScreen = ({ navigation, route }) => {
 
   const handleChange = (key, value) => {
     setForm({ ...form, [key]: value });
-    setErrors((prev) => ({ ...prev, [key]: null })); // clear error when editing
+    setErrors((prev) => ({ ...prev, [key]: null }));
+
+    // Kiểm tra email khi user nhập
+    if (key === "email" && value && /^\S+@\S+\.\S+$/.test(value)) {
+      checkEmailAvailability(value);
+    }
   };
+
+  const checkEmailAvailability = useCallback(async (email) => {
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return;
+
+    setCheckingEmail(true);
+    try {
+      await authService.checkEmail(email);
+      // Email available - không cần làm gì
+    } catch (error) {
+      if (error.response?.status === 409) {
+        setErrors((prev) => ({ ...prev, email: "Email này đã được đăng ký" }));
+      }
+    } finally {
+      setCheckingEmail(false);
+    }
+  }, []);
 
   const toggleSubject = (subjectId) => {
     const newSubjectIds = form.subjectIds.includes(subjectId)
@@ -73,6 +99,11 @@ const TutorSignupScreen = ({ navigation, route }) => {
     } else if (!/^\S+@\S+\.\S+$/.test(form.email)) {
       newErrors.email = "Email không hợp lệ";
     }
+    if (!form.phone.trim()) {
+      newErrors.phone = "Số điện thoại là bắt buộc";
+    } else if (!/^\d{9,11}$/.test(form.phone)) {
+      newErrors.phone = "Số điện thoại không hợp lệ (9-11 số)";
+    }
     if (!form.password.trim()) {
       newErrors.password = "Mật khẩu là bắt buộc";
     } else if (form.password.length < 6) {
@@ -87,16 +118,8 @@ const TutorSignupScreen = ({ navigation, route }) => {
       newErrors.educationLevel = "Trình độ học vấn là bắt buộc";
     if (form.subjectIds.length === 0)
       newErrors.subjectIds = "Vui lòng chọn ít nhất một môn học";
-    if (!form.password.trim()) {
-      newErrors.password = "Mật khẩu là bắt buộc";
-    } else if (form.password.length < 6) {
-      newErrors.password = "Mật khẩu phải từ 6 ký tự";
-    }
 
     // Optional validations
-    if (form.phone && !/^\d{9,11}$/.test(form.phone)) {
-      newErrors.phone = "Số điện thoại không hợp lệ";
-    }
     if (
       form.experienceYears &&
       (isNaN(form.experienceYears) || form.experienceYears < 0)
@@ -262,271 +285,362 @@ const TutorSignupScreen = ({ navigation, route }) => {
     }
   };
 
-  const renderInput = (
-    label,
-    key,
-    placeholder,
-    keyboardType = "default",
-    secure = false
-  ) => (
-    <>
-      <Text style={styles.label}>{label}</Text>
-      <TextInput
-        placeholder={placeholder}
-        style={[styles.input, errors[key] && { borderColor: "red" }]}
-        keyboardType={keyboardType}
-        secureTextEntry={secure}
-        value={form[key]}
-        onChangeText={(text) => handleChange(key, text)}
-      />
-      {errors[key] && <Text style={styles.error}>{errors[key]}</Text>}
-    </>
-  );
-
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff" }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Image source={require("../../assets/logo1.png")} style={styles.logo} />
-      <Text style={styles.title}>Đăng Ký</Text>
-
-      <View style={styles.inputContainer}>
-        {renderInput("Họ Và Tên *", "fullName", "Nguyễn Văn A")}
-        {renderInput("Email *", "email", "example@email.com", "email-address")}
-        {renderInput("Số Điện Thoại", "phone", "0123456789", "phone-pad")}
-        {renderInput("Ngày Sinh", "dateOfBirth", "DD/MM/YYYY")}
-
-        <Text style={styles.label}>Trình Độ Học Vấn *</Text>
-        <View
-          style={[
-            styles.pickerWrapper,
-            errors.educationLevel && { borderColor: "red" },
-          ]}
-        >
-          <Picker
-            selectedValue={form.educationLevel}
-            onValueChange={(value) => handleChange("educationLevel", value)}
-          >
-            <Picker.Item label="Chọn trình độ học vấn" value="" />
-            <Picker.Item label="THPT" value="THPT" />
-            <Picker.Item label="Cao đẳng" value="Cao đẳng" />
-            <Picker.Item label="Đại học" value="Đại học" />
-            <Picker.Item label="Thạc sĩ" value="Thạc sĩ" />
-            <Picker.Item label="Tiến sĩ" value="Tiến sĩ" />
-          </Picker>
-        </View>
-        {errors.educationLevel && (
-          <Text style={styles.error}>{errors.educationLevel}</Text>
-        )}
-
-        {renderInput("Trường Đại Học", "university", "Tên trường đại học")}
-        {renderInput("Chuyên Ngành", "major", "Chuyên ngành học")}
-        {renderInput("Năm Kinh Nghiệm", "experienceYears", "0", "numeric")}
-        {renderInput("Giá/Giờ (VNĐ)", "hourlyRate", "100000", "numeric")}
-
-        <Text style={styles.label}>Giới Thiệu Bản Thân</Text>
-        <TextInput
-          placeholder="Mô tả về bản thân, kinh nghiệm giảng dạy..."
-          style={[
-            styles.textArea,
-            errors.introduction && { borderColor: "red" },
-          ]}
-          value={form.introduction}
-          onChangeText={(text) => handleChange("introduction", text)}
-          multiline
-          numberOfLines={4}
-        />
-        {errors.introduction && (
-          <Text style={styles.error}>{errors.introduction}</Text>
-        )}
-
-        <Text style={styles.label}>Môn Học Giảng Dạy</Text>
-        <View style={styles.subjectsContainer}>
-          {subjects.map((subject) => (
-            <TouchableOpacity
-              key={subject.id}
-              style={[
-                styles.subjectButton,
-                form.subjectIds.includes(subject.id) &&
-                  styles.subjectButtonSelected,
-              ]}
-              onPress={() => toggleSubject(subject.id)}
-            >
-              <Text
-                style={[
-                  styles.subjectButtonText,
-                  form.subjectIds.includes(subject.id) &&
-                    styles.subjectButtonTextSelected,
-                ]}
-              >
-                {subject.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        {renderInput("Mật Khẩu *", "password", "Mật khẩu", "default", true)}
-        {renderInput(
-          "Nhập Lại Mật Khẩu *",
-          "confirmPassword",
-          "Nhập lại mật khẩu",
-          "default",
-          true
-        )}
-      </View>
-
-      <Text style={styles.policy}>
-        Bằng cách tiếp tục, bạn đồng ý với{" "}
-        <Text style={{ fontWeight: "bold" }}>Điều khoản sử dụng</Text> và{" "}
-        <Text style={{ fontWeight: "bold" }}>Chính sách bảo mật</Text>.
-      </Text>
-
-      <TouchableOpacity
-        style={[styles.button, loading && styles.disabledButton]}
-        onPress={handleRegister}
-        disabled={loading}
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text style={styles.buttonText}>
-          {loading ? "Đang đăng ký..." : "Đăng Ký"}
-        </Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={28} color="#000" />
+        </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate("TutorLogin")}>
-        <Text style={styles.loginHint}>
-          Bạn đã có tài khoản?{" "}
-          <Text style={{ textDecorationLine: "underline" }}>
-            Đăng Nhập ngay
+        <View style={styles.header}>
+          <Image
+            source={require("../../assets/logo1.png")}
+            style={styles.logo}
+          />
+          <Text style={styles.title}>Đăng Ký Gia Sư</Text>
+          <Text style={styles.subtitle}>Tạo tài khoản gia sư của bạn</Text>
+        </View>
+
+        <View style={styles.form}>
+          <Input
+            label="Họ và Tên *"
+            placeholder="Nhập họ và tên"
+            value={form.fullName}
+            onChangeText={(text) => handleChange("fullName", text)}
+            leftIcon={<Ionicons name="person-outline" size={20} color="#666" />}
+            error={errors.fullName}
+          />
+          <Input
+            label="Email *"
+            placeholder="example@email.com"
+            value={form.email}
+            onChangeText={(text) => handleChange("email", text)}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            leftIcon={<Ionicons name="mail-outline" size={20} color="#666" />}
+            rightIcon={
+              checkingEmail ? (
+                <Ionicons name="hourglass-outline" size={20} color="#666" />
+              ) : null
+            }
+            error={errors.email}
+          />
+          <Input
+            label="Số điện thoại *"
+            placeholder="0123456789"
+            value={form.phone}
+            onChangeText={(text) => handleChange("phone", text)}
+            keyboardType="phone-pad"
+            leftIcon={<Ionicons name="call-outline" size={20} color="#666" />}
+            error={errors.phone}
+          />
+          <Input
+            label="Ngày sinh"
+            placeholder="DD/MM/YYYY"
+            value={form.dateOfBirth}
+            onChangeText={(text) => handleChange("dateOfBirth", text)}
+            leftIcon={
+              <Ionicons name="calendar-outline" size={20} color="#666" />
+            }
+            error={errors.dateOfBirth}
+          />
+
+          <Text style={styles.label}>Trình độ học vấn *</Text>
+          <View
+            style={[
+              styles.pickerWrapper,
+              errors.educationLevel && styles.errorInput,
+            ]}
+          >
+            <Picker
+              selectedValue={form.educationLevel}
+              onValueChange={(value) => handleChange("educationLevel", value)}
+              style={{ color: form.educationLevel ? "#000" : "#999" }}
+            >
+              <Picker.Item label="Chọn trình độ học vấn" value="" />
+              <Picker.Item label="THPT" value="THPT" />
+              <Picker.Item label="Cao đẳng" value="Cao đẳng" />
+              <Picker.Item label="Đại học" value="Đại học" />
+              <Picker.Item label="Thạc sĩ" value="Thạc sĩ" />
+              <Picker.Item label="Tiến sĩ" value="Tiến sĩ" />
+            </Picker>
+          </View>
+          {errors.educationLevel && (
+            <Text style={styles.errorText}>{errors.educationLevel}</Text>
+          )}
+
+          <Input
+            label="Trường đại học"
+            placeholder="Tên trường đại học"
+            value={form.university}
+            onChangeText={(text) => handleChange("university", text)}
+            leftIcon={<Ionicons name="school-outline" size={20} color="#666" />}
+            error={errors.university}
+          />
+          <Input
+            label="Chuyên ngành"
+            placeholder="Chuyên ngành học"
+            value={form.major}
+            onChangeText={(text) => handleChange("major", text)}
+            leftIcon={
+              <Ionicons name="library-outline" size={20} color="#666" />
+            }
+            error={errors.major}
+          />
+          <Input
+            label="Năm kinh nghiệm"
+            placeholder="0"
+            value={form.experienceYears}
+            onChangeText={(text) => handleChange("experienceYears", text)}
+            keyboardType="numeric"
+            leftIcon={<Ionicons name="time-outline" size={20} color="#666" />}
+            error={errors.experienceYears}
+          />
+          <Input
+            label="Giá/giờ (VNĐ)"
+            placeholder="100000"
+            value={form.hourlyRate}
+            onChangeText={(text) => handleChange("hourlyRate", text)}
+            keyboardType="numeric"
+            leftIcon={<Ionicons name="cash-outline" size={20} color="#666" />}
+            error={errors.hourlyRate}
+          />
+
+          <Input
+            label="Giới thiệu bản thân"
+            placeholder="Mô tả về bản thân, kinh nghiệm giảng dạy..."
+            value={form.introduction}
+            onChangeText={(text) => handleChange("introduction", text)}
+            leftIcon={
+              <Ionicons name="chatbubble-outline" size={20} color="#666" />
+            }
+            error={errors.introduction}
+            multiline
+            numberOfLines={3}
+          />
+
+          <Text style={styles.label}>Môn học dạy *</Text>
+          <View style={styles.subjectsContainer}>
+            {subjects.map((subject) => (
+              <TouchableOpacity
+                key={subject.id}
+                style={[
+                  styles.subjectChip,
+                  form.subjectIds.includes(subject.id) && styles.selectedChip,
+                ]}
+                onPress={() => toggleSubject(subject.id)}
+              >
+                <Text
+                  style={[
+                    styles.subjectText,
+                    form.subjectIds.includes(subject.id) && styles.selectedText,
+                  ]}
+                >
+                  {subject.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          {errors.subjectIds && (
+            <Text style={styles.errorText}>{errors.subjectIds}</Text>
+          )}
+
+          <Input
+            label="Mật khẩu *"
+            placeholder="Nhập mật khẩu"
+            value={form.password}
+            onChangeText={(text) => handleChange("password", text)}
+            secureTextEntry
+            leftIcon={
+              <Ionicons name="lock-closed-outline" size={20} color="#666" />
+            }
+            error={errors.password}
+          />
+          <Input
+            label="Xác nhận mật khẩu *"
+            placeholder="Nhập lại mật khẩu"
+            value={form.confirmPassword}
+            onChangeText={(text) => handleChange("confirmPassword", text)}
+            secureTextEntry
+            leftIcon={
+              <Ionicons name="lock-closed-outline" size={20} color="#666" />
+            }
+            error={errors.confirmPassword}
+          />
+        </View>
+
+        <TouchableOpacity
+          style={[styles.registerButton, loading && styles.disabledButton]}
+          onPress={handleRegister}
+          disabled={loading}
+          activeOpacity={0.8}
+        >
+          <LinearGradient
+            colors={["#000", "#333"]}
+            style={styles.buttonGradient}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? "Đang đăng ký..." : "Đăng Ký"}
+            </Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.loginLink}
+          onPress={() => navigation.navigate("TutorLogin")}
+        >
+          <Text style={styles.linkText}>
+            Đã có tài khoản? <Text style={styles.linkTextBold}>Đăng nhập</Text>
           </Text>
-        </Text>
-      </TouchableOpacity>
-    </ScrollView>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: "#fffefb",
-  },
-  contentContainer: {
-    alignItems: "center",
-    paddingHorizontal: 24,
-    paddingTop: 50,
-    paddingBottom: 30,
-  },
-  pickerWrapper: {
-    borderWidth: 1,
-    borderColor: "#999",
-    borderRadius: 25,
+    flexGrow: 1,
     backgroundColor: "#fff",
-    marginBottom: 4,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 20,
+  },
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 10,
+    zIndex: 10,
+    backgroundColor: "rgba(0,0,0,0.04)",
+    borderRadius: 20,
+    padding: 6,
+  },
+  header: {
+    alignItems: "center",
+    marginBottom: 24,
+    marginTop: 24,
   },
   logo: {
-    width: width * 0.35,
-    height: 120,
+    width: width * 0.3,
+    height: 100,
     resizeMode: "contain",
-    marginBottom: 4,
+    marginBottom: 10,
   },
   title: {
     fontSize: 28,
-    color: "#007bff",
     fontWeight: "bold",
-    marginBottom: 20,
+    color: "#000",
+    letterSpacing: 1,
+    marginBottom: 4,
   },
-  inputContainer: {
+  subtitle: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  form: {
     width: "100%",
+    marginBottom: 24,
   },
   label: {
     marginBottom: 6,
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "500",
     color: "#000",
   },
-  input: {
-    width: "100%",
+  pickerWrapper: {
     borderWidth: 1,
-    borderColor: "#999",
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    fontSize: 15,
-    backgroundColor: "#fff",
-    marginBottom: 4,
-  },
-  error: {
-    color: "red",
-    fontSize: 13,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
     marginBottom: 8,
-    paddingLeft: 10,
   },
-  policy: {
-    fontSize: 13,
-    color: "#333",
-    textAlign: "center",
-    marginVertical: 12,
-    paddingHorizontal: 8,
+  errorInput: {
+    borderColor: "#ff4444",
   },
-  button: {
-    backgroundColor: "#31B7EC",
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 25,
-    marginVertical: 8,
-    width: "100%",
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  loginHint: {
-    fontSize: 13,
-    color: "#333",
-    marginTop: 10,
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-  textArea: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#999",
-    borderRadius: 25,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 15,
-    backgroundColor: "#fff",
-    marginBottom: 4,
-    textAlignVertical: "top",
-    minHeight: 80,
+  errorText: {
+    color: "#ff4444",
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 8,
   },
   subjectsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     marginBottom: 16,
   },
-  subjectButton: {
+  subjectChip: {
     borderWidth: 1,
-    borderColor: "#999",
+    borderColor: "#ddd",
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 12,
     margin: 4,
-    backgroundColor: "#fff",
+    backgroundColor: "#f9f9f9",
   },
-  subjectButtonSelected: {
-    backgroundColor: "#31B7EC",
-    borderColor: "#31B7EC",
+  selectedChip: {
+    backgroundColor: "#000",
+    borderColor: "#000",
   },
-  subjectButtonText: {
+  subjectText: {
     fontSize: 14,
-    color: "#333",
+    color: "#666",
   },
-  subjectButtonTextSelected: {
+  selectedText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  registerButton: {
+    width: "100%",
+    borderRadius: 30,
+    overflow: "hidden",
+    marginTop: 10,
+    marginBottom: 10,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  buttonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    letterSpacing: 0.5,
+  },
+  loginLink: {
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 30,
+  },
+  linkText: {
+    fontSize: 16,
+    color: "#666",
+  },
+  linkTextBold: {
+    color: "#000",
+    fontWeight: "bold",
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
 

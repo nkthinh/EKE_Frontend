@@ -25,7 +25,7 @@ const ChatListScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Use the new message hook
   const {
     conversations,
@@ -60,7 +60,7 @@ const ChatListScreen = ({ navigation }) => {
   const loadChatListFallback = async () => {
     try {
       setLoading(true);
-      const response = await messageService.getConversations();
+      const response = await messageService.getConversations(userData?.id);
       console.log("Chat list loaded from API:", response);
       setStudents(response.data || response || []);
     } catch (error) {

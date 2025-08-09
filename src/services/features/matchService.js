@@ -1,4 +1,5 @@
 import { api } from "../api";
+import tutorService from "./tutorService";
 
 const matchService = {
   // ==================== SWIPE ACTION FLOW ====================
@@ -41,38 +42,83 @@ const matchService = {
   },
 
   // Step 2: Tutor gets list of students who liked them
-  async getLikedStudents(tutorId) {
+  async getLikedStudents(userId) {
     try {
       console.log("🎯 === GET LIKED STUDENTS API CALL ===");
-      console.log("👤 Tutor ID:", tutorId);
-      console.log("📊 Tutor ID type:", typeof tutorId);
+      console.log("👤 User ID:", userId);
+      console.log("👤 User ID type:", typeof userId);
 
-      // Validate tutor ID
-      const parsedTutorId = parseInt(tutorId);
-      if (isNaN(parsedTutorId) || parsedTutorId <= 0) {
-        console.error("❌ Invalid tutor ID:", tutorId);
-        throw new Error("Invalid tutor ID");
+      // Step 1: Get all tutors from tutor/search API
+      console.log("🔍 Step 1: Getting all tutors...");
+      const tutorsResponse = await tutorService.searchTutors();
+      console.log("📥 Tutors response:", tutorsResponse);
+
+      // Step 2: Find tutor with matching userId
+      const tutors = tutorsResponse?.data || [];
+      console.log("📋 All tutors count:", tutors.length);
+
+      // Log each tutor for debugging
+      tutors.forEach((tutor, index) => {
+        console.log(`📋 Tutor ${index}:`, {
+          id: tutor.id,
+          userId: tutor.userId,
+          userIdType: typeof tutor.userId,
+          fullName: tutor.fullName,
+          email: tutor.email,
+        });
+      });
+
+      const matchingTutor = tutors.find((tutor) => {
+        console.log(
+          `🔍 Comparing tutor.userId (${
+            tutor.userId
+          }, type: ${typeof tutor.userId}) with userId (${userId}, type: ${typeof userId})`
+        );
+        return tutor.userId === userId;
+      });
+
+      if (!matchingTutor) {
+        console.log("❌ No tutor found with userId:", userId);
+        console.log(
+          "❌ Available tutor userIds:",
+          tutors.map((t) => ({
+            id: t.id,
+            userId: t.userId,
+            userIdType: typeof t.userId,
+          }))
+        );
+        return [];
       }
 
-      console.log(
-        "🌐 API URL:",
-        `/SwipeAction/liked-students/${parsedTutorId}`
-      );
+      const tutorId = matchingTutor.id;
+      console.log("✅ Found tutor ID:", tutorId, "for user ID:", userId);
+      console.log("✅ Tutor details:", matchingTutor);
 
-      const response = await api.get(
-        `/SwipeAction/liked-students/${parsedTutorId}`
-      );
-      console.log("📥 API Response:", JSON.stringify(response.data, null, 2));
-      console.log("✅ === GET LIKED STUDENTS COMPLETED ===");
+      // Step 3: Get liked students using tutor ID
+      console.log("🔍 Step 3: Getting liked students for tutor ID:", tutorId);
+      const response = await api.get(`/SwipeAction/liked-students/${tutorId}`);
+      console.log("📥 API Response:", response.data);
 
-      return response.data;
+      const likedStudents = response.data?.data || [];
+      console.log("📋 Liked students count:", likedStudents.length);
+
+      // Log each liked student for debugging
+      likedStudents.forEach((student, index) => {
+        console.log(`📋 Liked Student ${index}:`, {
+          id: student.id,
+          studentId: student.studentId,
+          userId: student.userId,
+          fullName: student.fullName || student.student?.fullName,
+          email: student.email || student.student?.email,
+          student: student.student,
+        });
+      });
+
+      return likedStudents;
     } catch (error) {
       console.error("❌ Get liked students error:", error);
-      console.error("🔍 Error details:", {
-        message: error.message,
-        response: error.response?.data,
-        status: error.response?.status,
-      });
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
       throw error.response?.data || error;
     }
   },
@@ -80,17 +126,76 @@ const matchService = {
   // Step 3: Tutor accepts a student's like (creates match)
   async acceptMatch(tutorId, studentId) {
     try {
+      console.log("🔍 === ACCEPT MATCH DEBUG ===");
+      console.log("📥 Input parameters:");
+      console.log("   tutorId (type):", typeof tutorId, "value:", tutorId);
+      console.log(
+        "   studentId (type):",
+        typeof studentId,
+        "value:",
+        studentId
+      );
+
+      // Convert to numbers as required by API
+      const tutorIdNum = parseInt(tutorId);
+      const studentIdNum = parseInt(studentId);
+
+      console.log("🔄 After conversion to numbers:");
+      console.log(
+        "   tutorId (type):",
+        typeof tutorIdNum,
+        "value:",
+        tutorIdNum
+      );
+      console.log(
+        "   studentId (type):",
+        typeof studentIdNum,
+        "value:",
+        studentIdNum
+      );
+
       const acceptData = {
-        tutorId: parseInt(tutorId),
-        studentId: parseInt(studentId),
+        tutorId: tutorIdNum,
+        studentId: studentIdNum,
         acceptedAt: new Date().toISOString(),
       };
 
-      console.log("Tutor accepting match:", acceptData);
+      console.log(
+        "📤 Request data being sent:",
+        JSON.stringify(acceptData, null, 2)
+      );
+      console.log("🌐 API endpoint: /SwipeAction/accept-match");
+
       const response = await api.post("/SwipeAction/accept-match", acceptData);
-      return response.data;
+
+      console.log("📥 API response:", JSON.stringify(response.data, null, 2));
+      console.log("✅ Accept match successful");
+
+      // Add tutorId to the response for conversation creation
+      const responseWithTutorId = {
+        ...response.data,
+        tutorId: tutorIdNum,
+      };
+
+      return responseWithTutorId;
     } catch (error) {
-      console.error("Accept match error:", error);
+      console.error("❌ Accept match error:", error);
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
+
+      // Check if it's a 400 error (already accepted)
+      if (error.response?.status === 400) {
+        console.log(
+          "⚠️ Student already accepted (400 error), treating as success"
+        );
+        return {
+          success: true,
+          type: "already_accepted",
+          tutorId: tutorIdNum, // Include tutorId for consistency
+          message: "Student already accepted successfully!",
+        };
+      }
+
       throw error.response?.data || error;
     }
   },
@@ -98,17 +203,76 @@ const matchService = {
   // Additional SwipeAction utilities
   async rejectMatch(tutorId, studentId) {
     try {
+      console.log("🔍 === REJECT MATCH DEBUG ===");
+      console.log("📥 Input parameters:");
+      console.log("   tutorId (type):", typeof tutorId, "value:", tutorId);
+      console.log(
+        "   studentId (type):",
+        typeof studentId,
+        "value:",
+        studentId
+      );
+
+      // Convert to numbers as required by API
+      const tutorIdNum = parseInt(tutorId);
+      const studentIdNum = parseInt(studentId);
+
+      console.log("🔄 After conversion to numbers:");
+      console.log(
+        "   tutorId (type):",
+        typeof tutorIdNum,
+        "value:",
+        tutorIdNum
+      );
+      console.log(
+        "   studentId (type):",
+        typeof studentIdNum,
+        "value:",
+        studentIdNum
+      );
+
       const rejectData = {
-        tutorId: parseInt(tutorId),
-        studentId: parseInt(studentId),
+        tutorId: tutorIdNum,
+        studentId: studentIdNum,
         rejectedAt: new Date().toISOString(),
       };
 
-      console.log("Tutor rejecting match:", rejectData);
+      console.log(
+        "📤 Request data being sent:",
+        JSON.stringify(rejectData, null, 2)
+      );
+      console.log("🌐 API endpoint: /SwipeAction/reject-match");
+
       const response = await api.post("/SwipeAction/reject-match", rejectData);
-      return response.data;
+
+      console.log("📥 API response:", JSON.stringify(response.data, null, 2));
+      console.log("✅ Reject match successful");
+
+      // Add tutorId to the response for consistency
+      const responseWithTutorId = {
+        ...response.data,
+        tutorId: tutorIdNum,
+      };
+
+      return responseWithTutorId;
     } catch (error) {
-      console.error("Reject match error:", error);
+      console.error("❌ Reject match error:", error);
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
+
+      // Check if it's a 400 error (already rejected)
+      if (error.response?.status === 400) {
+        console.log(
+          "⚠️ Student already rejected (400 error), treating as success"
+        );
+        return {
+          success: true,
+          type: "already_rejected",
+          tutorId: tutorIdNum, // Include tutorId for consistency
+          message: "Student already rejected successfully!",
+        };
+      }
+
       throw error.response?.data || error;
     }
   },
@@ -161,13 +325,13 @@ const matchService = {
   },
 
   // Complete workflow for tutor
-  async tutorMatchWorkflow(tutorId) {
+  async tutorMatchWorkflow(userId) {
     try {
       console.log("🎯 === TUTOR MATCH WORKFLOW ===");
-      console.log("👤 Tutor ID:", tutorId);
+      console.log("👤 User ID:", userId);
 
       // Get all students who liked this tutor
-      const likedStudents = await this.getLikedStudents(tutorId);
+      const likedStudents = await this.getLikedStudents(userId);
       console.log("📋 Liked students result:", likedStudents);
 
       const result = {
@@ -175,9 +339,6 @@ const matchService = {
         likedStudents: likedStudents,
         count: likedStudents.length,
       };
-
-      console.log("✅ Workflow result:", JSON.stringify(result, null, 2));
-      console.log("✅ === TUTOR MATCH WORKFLOW COMPLETED ===");
 
       return result;
     } catch (error) {
@@ -187,25 +348,89 @@ const matchService = {
   },
 
   // Handle tutor's response to student's like
-  async tutorRespondToLike(tutorId, studentId, action = "accept") {
+  async tutorRespondToLike(tutorUserId, studentId, action = "accept") {
     try {
+      console.log("🔍 === TUTOR RESPOND TO LIKE DEBUG ===");
+      console.log("📥 Input parameters:");
+      console.log(
+        "   tutorUserId:",
+        tutorUserId,
+        "(type:",
+        typeof tutorUserId,
+        ")"
+      );
+      console.log("   studentId:", studentId, "(type:", typeof studentId, ")");
+      console.log("   action:", action);
+
+      // Step 1: Get all tutors to find the matching tutorId
+      console.log("🔍 Step 1: Getting all tutors to find tutorId...");
+      const tutorsResponse = await tutorService.searchTutors();
+      const tutors = tutorsResponse?.data || [];
+
+      console.log("📋 All tutors count:", tutors.length);
+
+      // Find tutor with matching userId
+      const matchingTutor = tutors.find((tutor) => {
+        console.log(
+          `🔍 Comparing tutor.userId (${
+            tutor.userId
+          }, type: ${typeof tutor.userId}) with tutorUserId (${tutorUserId}, type: ${typeof tutorUserId})`
+        );
+        return tutor.userId === tutorUserId;
+      });
+
+      if (!matchingTutor) {
+        console.log("❌ No tutor found with userId:", tutorUserId);
+        throw new Error("Tutor not found");
+      }
+
+      const tutorId = matchingTutor.id;
+      console.log("✅ Found tutor ID:", tutorId, "for user ID:", tutorUserId);
+      console.log("✅ Tutor details:", matchingTutor);
+
+      // Step 2: Call acceptMatch or rejectMatch with the correct tutorId
       if (action === "accept") {
+        console.log("🔍 Step 2: Calling acceptMatch with tutorId:", tutorId);
         const match = await this.acceptMatch(tutorId, studentId);
+
+        // Check if it's already accepted
+        if (match.type === "already_accepted") {
+          return {
+            success: true,
+            type: "already_accepted",
+            message: "Student already accepted successfully!",
+          };
+        }
+
         return {
           success: true,
           type: "match_created",
           match: match,
+          tutorId: tutorId, // Include tutorId for conversation creation
           message: "Match created successfully!",
         };
       } else if (action === "reject") {
-        await this.rejectMatch(tutorId, studentId);
+        console.log("🔍 Step 2: Calling rejectMatch with tutorId:", tutorId);
+        const result = await this.rejectMatch(tutorId, studentId);
+
+        // Check if it's already rejected
+        if (result.type === "already_rejected") {
+          return {
+            success: true,
+            type: "already_rejected",
+            message: "Student already rejected successfully!",
+          };
+        }
+
         return {
           success: true,
           type: "match_rejected",
+          tutorId: tutorId, // Include tutorId for consistency
           message: "Student request rejected",
         };
       }
     } catch (error) {
+      console.error("❌ Tutor respond to like error:", error);
       throw error;
     }
   },

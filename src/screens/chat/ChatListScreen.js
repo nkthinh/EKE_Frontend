@@ -18,8 +18,10 @@ import BottomMenu from "../../components/common/BottomMenu";
 import StudentLayout from "../../components/navigation/StudentLayout";
 import { messageService } from "../../services";
 import { useMessage } from "../../hooks";
+import { useAuth } from "../../hooks/useAuth";
 
 const ChatListScreen = ({ navigation }) => {
+  const { userData } = useAuth();
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,7 +92,7 @@ const ChatListScreen = ({ navigation }) => {
   const loadChatListFallback = async () => {
     try {
       setLoading(true);
-      const response = await messageService.getConversations();
+      const response = await messageService.getConversations(userData?.id);
       console.log("Chat list loaded from API:", response);
       setStudents(response.data || response || []);
     } catch (error) {
@@ -129,14 +131,38 @@ const ChatListScreen = ({ navigation }) => {
     loadChatListFallback();
   }, []);
 
-  const navigateToChat = (student) => {
+  const navigateToChat = async (student) => {
     if (student.conversationData) {
-      // Navigate with conversation data
-      navigation.navigate("ChatDetail", {
-        conversationId: student.conversationData.id,
-        conversation: student.conversationData,
-        studentName: student.name,
-      });
+      try {
+        // Gọi API để lấy thông tin chi tiết cuộc trò chuyện ngay khi ấn vào
+        const conversationId = student.conversationData.id;
+        console.log(
+          "🔍 Calling API /Conversations/{conversationId} for ID:",
+          conversationId
+        );
+        const conversationDetails = await messageService.getConversationById(
+          conversationId
+        );
+        console.log("📥 Conversation details loaded:", conversationDetails);
+
+        // Navigate với thông tin chi tiết đã được cập nhật
+        navigation.navigate("ChatDetail", {
+          conversationId: conversationId,
+          conversation: conversationDetails, // Sử dụng thông tin chi tiết từ API
+          studentName: student.name,
+          userId: userData?.id, // Thêm userId
+        });
+      } catch (error) {
+        console.error("❌ Error loading conversation details:", error);
+
+        // Fallback: Navigate với thông tin cũ nếu API fail
+        navigation.navigate("ChatDetail", {
+          conversationId: student.conversationData.id,
+          conversation: student.conversationData,
+          studentName: student.name,
+          userId: userData?.id, // Thêm userId
+        });
+      }
     } else {
       // Legacy navigation
       navigation.navigate("ChatDetail", {
@@ -186,7 +212,7 @@ const ChatListScreen = ({ navigation }) => {
   const renderStudent = ({ item }) => (
     <TouchableOpacity
       style={styles.studentItem}
-      onPress={() => navigateToChat(item)}
+      onPress={async () => await navigateToChat(item)}
     >
       <View style={styles.avatarContainer}>
         <Image source={item.avatar} style={styles.avatar} />
@@ -258,7 +284,11 @@ const ChatListScreen = ({ navigation }) => {
         )}
       />
 
-      <BottomMenu navigation={navigation} currentScreen="ChatList" />
+      <BottomMenu
+        navigation={navigation}
+        activeTab="chat"
+        userRole={userData?.role}
+      />
     </View>
   );
 };
