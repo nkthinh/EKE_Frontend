@@ -12,6 +12,7 @@ import { useMatch } from "../../hooks/useMatch";
 import { useAuth } from "../../hooks/useAuth";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
 import { COLORS, SIZES } from "../../constants";
+import { messageService } from "../../services";
 
 const MatchListScreen = ({ navigation }) => {
   const { userData } = useAuth();
@@ -41,13 +42,42 @@ const MatchListScreen = ({ navigation }) => {
       // Update match activity (last seen)
       await updateMatchStatus(match.id, "active");
 
-      // Navigate to chat screen
+      // Nếu match có conversationId, gọi API để lấy thông tin chi tiết
+      if (match.conversationId) {
+        console.log(
+          "🔍 Calling API /Conversations/{conversationId} for ID:",
+          match.conversationId
+        );
+        const conversationDetails = await messageService.getConversationById(
+          match.conversationId
+        );
+        console.log("📥 Conversation details loaded:", conversationDetails);
+
+        // Navigate với thông tin chi tiết đã được cập nhật
+        navigation.navigate("ChatDetail", {
+          matchId: match.id,
+          conversationId: match.conversationId,
+          conversation: conversationDetails, // Sử dụng thông tin chi tiết từ API
+          otherUser: userData?.role === "student" ? match.tutor : match.student,
+          userId: userData?.id, // Thêm userId
+        });
+      } else {
+        // Navigate to chat screen với thông tin cũ
+        navigation.navigate("ChatDetail", {
+          matchId: match.id,
+          otherUser: userData?.role === "student" ? match.tutor : match.student,
+          userId: userData?.id, // Thêm userId
+        });
+      }
+    } catch (error) {
+      console.error("Error opening match:", error);
+
+      // Fallback: Navigate với thông tin cũ nếu API fail
       navigation.navigate("ChatDetail", {
         matchId: match.id,
         otherUser: userData?.role === "student" ? match.tutor : match.student,
+        userId: userData?.id, // Thêm userId
       });
-    } catch (error) {
-      console.error("Error opening match:", error);
     }
   };
 
@@ -60,7 +90,7 @@ const MatchListScreen = ({ navigation }) => {
     return (
       <TouchableOpacity
         style={styles.matchCard}
-        onPress={() => handleMatchPress(item)}
+        onPress={async () => await handleMatchPress(item)}
       >
         <View style={styles.avatarContainer}>
           <Image

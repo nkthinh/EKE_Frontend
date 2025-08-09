@@ -7,109 +7,77 @@ import {
   ScrollView,
   Alert,
 } from "react-native";
-import { debugStorage, clearAllUserData } from "../../utils/debugStorage";
+import { useAuth } from "../../hooks/useAuth";
+import { useMatch } from "../../hooks/useMatch";
+import { isTutor } from "../../utils/navigation";
 
 const DebugScreen = ({ navigation }) => {
-  const [debugData, setDebugData] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const { userData } = useAuth();
+  const { likedStudents, fetchLikedStudents, loading, error } = useMatch();
+  const [debugInfo, setDebugInfo] = useState("");
 
   useEffect(() => {
-    loadDebugData();
-  }, []);
+    updateDebugInfo();
+  }, [userData, likedStudents, loading, error]);
 
-  const loadDebugData = async () => {
-    setLoading(true);
+  const updateDebugInfo = () => {
+    const info = `
+=== DEBUG INFO ===
+User Data:
+- ID: ${userData?.id || "N/A"}
+- Role: ${userData?.role || "N/A"}
+- Is Tutor: ${isTutor(userData?.role) ? "YES" : "NO"}
+- Full Name: ${userData?.fullName || "N/A"}
+
+Liked Students:
+- Count: ${likedStudents?.length || 0}
+- Data: ${JSON.stringify(likedStudents, null, 2)}
+
+Loading: ${loading}
+Error: ${error || "None"}
+    `;
+    setDebugInfo(info);
+  };
+
+  const handleTestFetch = async () => {
+    console.log("🧪 Testing fetchLikedStudents...");
     try {
-      const data = await debugStorage();
-      setDebugData(data);
+      await fetchLikedStudents();
+      Alert.alert("Success", "fetchLikedStudents completed");
     } catch (error) {
-      console.error("Error loading debug data:", error);
-    } finally {
-      setLoading(false);
+      Alert.alert("Error", error.message);
     }
   };
 
-  const handleClearData = async () => {
-    Alert.alert(
-      "Xác nhận",
-      "Bạn có chắc chắn muốn xóa tất cả dữ liệu người dùng?",
-      [
-        {
-          text: "Hủy",
-          style: "cancel",
-        },
-        {
-          text: "Xóa",
-          style: "destructive",
-          onPress: async () => {
-            setLoading(true);
-            try {
-              await clearAllUserData();
-              await loadDebugData();
-              Alert.alert("Thành công", "Đã xóa tất cả dữ liệu người dùng");
-            } catch (error) {
-              Alert.alert("Lỗi", "Không thể xóa dữ liệu");
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
-  const handleRestart = () => {
-    navigation.replace("Splash");
+  const handleAutoFetch = () => {
+    console.log("🚀 Triggering auto-fetch...");
+    if (userData?.id && isTutor(userData?.role)) {
+      fetchLikedStudents();
+    } else {
+      Alert.alert("Error", "User not available or not a tutor");
+    }
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       <Text style={styles.title}>Debug Screen</Text>
 
-      <TouchableOpacity style={styles.button} onPress={loadDebugData}>
-        <Text style={styles.buttonText}>Refresh Data</Text>
+      <TouchableOpacity style={styles.button} onPress={handleTestFetch}>
+        <Text style={styles.buttonText}>Test fetchLikedStudents</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, styles.clearButton]}
-        onPress={handleClearData}
-      >
-        <Text style={styles.buttonText}>Clear All User Data</Text>
+      <TouchableOpacity style={styles.button} onPress={handleAutoFetch}>
+        <Text style={styles.buttonText}>Auto Fetch (like TutorHomeScreen)</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, styles.restartButton]}
-        onPress={handleRestart}
-      >
-        <Text style={styles.buttonText}>Restart App</Text>
+      <TouchableOpacity style={styles.button} onPress={updateDebugInfo}>
+        <Text style={styles.buttonText}>Refresh Debug Info</Text>
       </TouchableOpacity>
 
-      {loading && <Text style={styles.loading}>Loading...</Text>}
-
-      {debugData && (
-        <View style={styles.debugContainer}>
-          <Text style={styles.sectionTitle}>Storage Data:</Text>
-
-          <Text style={styles.label}>User Token:</Text>
-          <Text style={styles.value}>{debugData.token || "null"}</Text>
-
-          <Text style={styles.label}>User Role:</Text>
-          <Text style={styles.value}>{debugData.userRole || "null"}</Text>
-
-          <Text style={styles.label}>User Data:</Text>
-          <Text style={styles.value}>
-            {debugData.userData
-              ? JSON.stringify(debugData.userData, null, 2)
-              : "null"}
-          </Text>
-
-          <Text style={styles.label}>All Storage Keys:</Text>
-          <Text style={styles.value}>
-            {debugData.allKeys ? debugData.allKeys.join(", ") : "null"}
-          </Text>
-        </View>
-      )}
-    </ScrollView>
+      <ScrollView style={styles.debugContainer}>
+        <Text style={styles.debugText}>{debugInfo}</Text>
+      </ScrollView>
+    </View>
   );
 };
 
@@ -130,48 +98,22 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
-    alignItems: "center",
-  },
-  clearButton: {
-    backgroundColor: "#FF3B30",
-  },
-  restartButton: {
-    backgroundColor: "#34C759",
   },
   buttonText: {
     color: "white",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  loading: {
     textAlign: "center",
-    fontSize: 16,
-    marginVertical: 10,
+    fontWeight: "bold",
   },
   debugContainer: {
+    flex: 1,
     backgroundColor: "white",
-    padding: 15,
+    padding: 10,
     borderRadius: 8,
     marginTop: 20,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    marginTop: 10,
-    marginBottom: 5,
-  },
-  value: {
+  debugText: {
     fontSize: 12,
-    color: "#666",
-    backgroundColor: "#f0f0f0",
-    padding: 8,
-    borderRadius: 4,
-    marginBottom: 10,
+    fontFamily: "monospace",
   },
 });
 

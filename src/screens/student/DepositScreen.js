@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,9 +9,30 @@ import {
 } from "react-native";
 import StudentLayout from "../../components/navigation/StudentLayout";
 import Icon from "react-native-vector-icons/Ionicons";
+import { useAuth } from "../../hooks/useAuth";
+import { walletService } from "../../services";
+import { formatCurrency } from "../../utils/format";
 
-const DepositScreen = ({ navigation }) => {
-  const [amount, setAmount] = useState("");
+const DepositScreen = ({ navigation, route }) => {
+  const [amount, setAmount] = useState(
+    route?.params?.requiredAmount ? String(route.params.requiredAmount) : ""
+  );
+  const { userData } = useAuth();
+  const [wallet, setWallet] = useState({ balance: 0 });
+
+  useEffect(() => {
+    const loadWallet = async () => {
+      try {
+        if (!userData?.id) return;
+        const data = await walletService.getWallet(userData.id);
+        const walletData = data?.data || data;
+        setWallet(walletData || { balance: 0 });
+      } catch (e) {
+        console.warn("Load wallet failed:", e?.message);
+      }
+    };
+    loadWallet();
+  }, [userData?.id]);
 
   const handlePresetAmount = (value) => {
     setAmount(value);
@@ -32,16 +53,11 @@ const DepositScreen = ({ navigation }) => {
               style={styles.notificationIcon}
             />
           </View>
-          <View style={styles.profile}>
-            <Image
-              source={require("../../assets/girl.jpg")}
-              style={styles.profileImage}
-            />
-          </View>
-
           <View style={styles.balanceSection}>
             <Text style={styles.balanceLabel}>Số dư ví</Text>
-            <Text style={styles.balanceAmount}>800,000đ</Text>
+            <Text style={styles.balanceAmount}>
+              {formatCurrency(Number(wallet?.balance || 0))}
+            </Text>
           </View>
         </View>
         <View style={{ paddingHorizontal: 20 }}>
@@ -60,48 +76,21 @@ const DepositScreen = ({ navigation }) => {
               keyboardType="numeric"
               placeholder="0đ"
             />
-            <View style={styles.card}>
-              <View style={styles.presetButtons}>
-                <TouchableOpacity
-                  style={[styles.presetButton, styles.shadow]}
-                  onPress={() => handlePresetAmount("50,000đ")}
-                >
-                  <Text style={styles.presetButtonText}>50,000đ</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.presetButton, styles.shadow]}
-                  onPress={() => handlePresetAmount("100,000đ")}
-                >
-                  <Text style={styles.presetButtonText}>100,000đ</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.presetButton, styles.shadow]}
-                  onPress={() => handlePresetAmount("200,000đ")}
-                >
-                  <Text style={styles.presetButtonText}>200,000đ</Text>
-                </TouchableOpacity>
-              </View>
-              <View style={styles.presetButtons}>
-                <TouchableOpacity
-                  style={[styles.presetButton, styles.shadow]}
-                  onPress={() => handlePresetAmount("500,000đ")}
-                >
-                  <Text style={styles.presetButtonText}>500,000đ</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.presetButton, styles.shadow]}
-                  onPress={() => handlePresetAmount("1,000,000đ")}
-                >
-                  <Text style={styles.presetButtonText}>1,000,000đ</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.presetButton, styles.shadow]}
-                  onPress={() => handlePresetAmount("2,000,000đ")}
-                >
-                  <Text style={styles.presetButtonText}>2,000,000đ</Text>
-                </TouchableOpacity>
-              </View>
+
+            {/* QR Code section */}
+            <View style={[styles.card, { alignItems: "center" }]}>
+              <Text style={{ fontWeight: "bold", marginBottom: 10 }}>
+                Quét QR để chuyển khoản
+              </Text>
+              <Image
+                source={require("../../assets/qrcode.png")}
+                style={{ width: 260, height: 260, resizeMode: "contain" }}
+              />
+              <Text style={{ marginTop: 8, color: "#555" }}>
+                Nội dung chuyển khoản: SĐT + Họ tên
+              </Text>
             </View>
+            {/* Removed preset amount cards as requested */}
             <TouchableOpacity style={styles.submitButton}>
               <Text style={styles.submitButtonText}>Nạp Tiền</Text>
             </TouchableOpacity>
@@ -139,8 +128,7 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   profile: {
-    flex: 1,
-    alignItems: "flex-end",
+    display: "none",
   },
   balanceSection: {
     alignItems: "center",
@@ -156,13 +144,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
   },
-  profileImage: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 4,
-    borderColor: "#fff",
-  },
+  profileImage: {},
   buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

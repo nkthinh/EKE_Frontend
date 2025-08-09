@@ -22,7 +22,7 @@ class SignalRService {
       }
 
       this.connection = new HubConnectionBuilder()
-        .withUrl(`${config.api.baseURL}/notificationHub`, {
+        .withUrl(`${config.api.baseURL}/chathub`, {
           accessTokenFactory: () => token,
         })
         .withAutomaticReconnect()

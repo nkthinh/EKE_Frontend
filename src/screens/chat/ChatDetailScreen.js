@@ -18,21 +18,41 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
-import { messageService } from "../../services";
+import { messageService, conversationService } from "../../services";
 import { useMessage } from "../../hooks";
+import { useAuth } from "../../hooks/useAuth";
 
 const ChatDetailScreen = ({ route, navigation }) => {
-  const { name, studentName, conversationId, conversation, student } =
-    route.params || {};
+  const { userData } = useAuth();
+  const {
+    name,
+    studentName,
+    conversationId,
+    conversation,
+    student,
+    match,
+    otherUser,
+    userId,
+  } = route.params || {};
 
+  // Determine display name from various sources
   const displayName =
     name ||
     studentName ||
+    otherUser ||
     conversation?.participants?.find(
       (p) => p.id !== conversation?.currentUserId
     )?.fullName ||
+    match?.studentName ||
+    match?.student?.fullName ||
     "Người dùng";
-  const chatConversationId = conversationId || conversation?.id;
+
+  const chatConversationId =
+    conversationId || conversation?.id || match?.conversationId;
+
+  console.log("🔍 ChatDetailScreen - Route params:", route.params);
+  console.log("🔍 ChatDetailScreen - Display name:", displayName);
+  console.log("🔍 ChatDetailScreen - Conversation ID:", chatConversationId);
 
   // Use the message hook
   const {
@@ -84,7 +104,18 @@ const ChatDetailScreen = ({ route, navigation }) => {
   // Update local messages when hook messages change
   useEffect(() => {
     if (hookMessages && hookMessages.length > 0) {
-      setMessages(hookMessages);
+      // Thêm sortTime cho tin nhắn từ hook nếu chưa có
+      const messagesWithSortTime = hookMessages.map((msg) => ({
+        ...msg,
+        sortTime:
+          msg.sortTime || new Date(msg.timestamp || msg.createdAt).getTime(),
+      }));
+
+      // Sắp xếp đơn giản như student screen
+      const sortedHookMessages = messagesWithSortTime.sort(
+        (a, b) => a.sortTime - b.sortTime
+      );
+      setMessages(sortedHookMessages);
       setLoading(false);
     }
   }, [hookMessages]);
@@ -92,71 +123,102 @@ const ChatDetailScreen = ({ route, navigation }) => {
   const loadMessages = async () => {
     try {
       setLoading(true);
+      setError(null);
+
+      console.log("🔍 Loading messages for conversation:", chatConversationId);
+
       if (chatConversationId) {
-        await getConversationMessages(chatConversationId);
+        // Gọi API để lấy tin nhắn trong cuộc trò chuyện
+        const messagesData = await messageService.getConversationMessages(
+          chatConversationId
+        );
+        console.log("📥 Messages loaded from API:", messagesData);
+
+        // Format messages để hiển thị theo từng người
+        if (messagesData && Array.isArray(messagesData)) {
+          console.log("🔍 Debug message ownership:");
+          console.log(
+            "📋 userData?.id:",
+            userData?.id,
+            "(type:",
+            typeof userData?.id,
+            ")"
+          );
+          console.log(
+            "📋 userId from params:",
+            userId,
+            "(type:",
+            typeof userId,
+            ")"
+          );
+
+          const formattedMessages = messagesData.map((msg) => {
+            console.log(
+              "📋 msg.senderId:",
+              msg.senderId,
+              "(type:",
+              typeof msg.senderId,
+              ")"
+            );
+            console.log(
+              "📋 msg.isMine:",
+              msg.isMine,
+              "(type:",
+              typeof msg.isMine,
+              ")"
+            );
+            console.log("📋 msg.senderName:", msg.senderName);
+
+            // Sử dụng isMine từ API nếu có, nếu không thì so sánh senderId với userId
+            const isMyMessage =
+              msg.isMine === true ||
+              msg.isMine === "true" ||
+              String(msg.senderId) === String(userId || userData?.id);
+
+            console.log("📋 isMyMessage:", isMyMessage);
+
+            return {
+              id: msg.id,
+              from: isMyMessage ? "me" : "other",
+              text: msg.content,
+              timestamp: msg.createdAt || msg.timestamp,
+              type: msg.messageType === 1 ? "text" : "other",
+              senderName: msg.senderName,
+              senderAvatar: msg.senderAvatar,
+              isRead: msg.isRead,
+              isMine: msg.isMine,
+              // Thêm sortTime để sắp xếp đơn giản
+              sortTime: new Date(msg.createdAt || msg.timestamp).getTime(),
+            };
+          });
+
+          // Sort messages theo thời gian (cũ nhất trước, mới nhất sau) - đơn giản như student screen
+          const sortedMessages = formattedMessages.sort(
+            (a, b) => a.sortTime - b.sortTime
+          );
+
+          console.log("📱 Formatted messages:", formattedMessages);
+          console.log("📱 Sorted messages:", sortedMessages);
+          setMessages(sortedMessages);
+        } else {
+          console.log("⚠️ No messages data or not array");
+          setMessages([]);
+        }
       } else {
-        // Fallback to old system
-        await loadMessagesFromAPI();
+        console.warn("⚠️ No conversation ID available");
+        setMessages([]);
       }
     } catch (error) {
-      console.error("Error loading messages:", error);
+      console.error("❌ Error loading messages:", error);
       setError(error.message);
-      // Fallback to old system
-      await loadMessagesFromAPI();
+      setMessages([]);
+    } finally {
+      setLoading(false);
     }
   };
 
   // Load messages from API
   useEffect(() => {
-    const loadMessages = async () => {
-      try {
-        setLoading(true);
-        if (conversationId) {
-          const response = await messageService.getConversationMessages(
-            conversationId
-          );
-          console.log("Messages loaded from API:", response);
-          setMessages(response.data || response || []);
-        } else {
-          // Fallback to mock data if no conversationId
-          setMessages([
-            {
-              id: 1,
-              from: "other",
-              text: "Xin chào! Tôi có thể giúc gì cho bạn?",
-            },
-            { id: 2, from: "me", text: "Chào bạn! Tôi muốn tìm gia sư toán." },
-            {
-              id: 3,
-              from: "other",
-              text: "Tuyệt vời! Bạn cần gia sư cho cấp độ nào?",
-            },
-            { id: 4, from: "me", text: "Tôi cần gia sư cho lớp 10." },
-          ]);
-        }
-      } catch (error) {
-        console.error("Error loading messages:", error);
-        setError(error.message);
-        // Fallback to mock data if API fails
-        setMessages([
-          {
-            id: 1,
-            from: "other",
-            text: "Xin chào! Tôi có thể giúc gì cho bạn?",
-          },
-          { id: 2, from: "me", text: "Chào bạn! Tôi muốn tìm gia sư toán." },
-          {
-            id: 3,
-            from: "other",
-            text: "Tuyệt vời! Bạn cần gia sư cho cấp độ nào?",
-          },
-          { id: 4, from: "me", text: "Tôi cần gia sư cho lớp 10." },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadMessages();
   }, [conversationId]);
 
@@ -166,31 +228,62 @@ const ChatDetailScreen = ({ route, navigation }) => {
         const messageText = input.trim();
         setInput(""); // Clear input immediately for better UX
 
-        if (chatConversationId && sendMessage) {
-          // Use new message system
-          await sendMessage(chatConversationId, messageText, "text");
-        } else {
-          // Fallback to old system
-          const newMsg = {
-            id: Date.now(),
-            from: "me",
-            text: messageText,
-            timestamp: new Date().toISOString(),
-          };
-          setMessages((prevMessages) => [...prevMessages, newMsg]);
+        console.log("🔍 Sending message:", messageText);
+        console.log("🔍 Conversation ID:", chatConversationId);
 
-          // Save to API if available
+        if (chatConversationId) {
+          // Gọi API để gửi tin nhắn
+          console.log(
+            "📤 Sending message to conversation:",
+            chatConversationId
+          );
+
           try {
-            if (chatConversationId) {
-              await messageService.sendMessage({
-                conversationId: chatConversationId,
-                content: messageText,
-                messageType: "text",
-              });
-            }
+            const result = await messageService.sendMessage({
+              conversationId: chatConversationId,
+              senderId: userId || userData?.id, // Sử dụng userId từ params hoặc userData
+              content: messageText,
+              messageType: 1, // 1 for text message
+            });
+
+            console.log("✅ Message sent successfully:", result);
+
+            // Refresh messages to show the new message
+            setTimeout(() => {
+              loadMessages();
+            }, 500);
+
+            // Thêm tin nhắn mới vào state ngay lập tức để UX tốt hơn
+            const newMessage = {
+              id: Date.now(), // Tạm thời ID
+              from: "me",
+              text: messageText,
+              timestamp: new Date().toISOString(),
+              type: "text",
+              senderName: userData?.fullName || "Tôi",
+              isRead: false,
+              isMine: true,
+              sortTime: Date.now(), // Thêm sortTime đơn giản
+            };
+
+            setMessages((prevMessages) => {
+              const updatedMessages = [...prevMessages, newMessage];
+              // Sắp xếp lại đơn giản như student screen
+              return updatedMessages.sort((a, b) => a.sortTime - b.sortTime);
+            });
           } catch (apiError) {
-            console.error("Error saving message to API:", apiError);
+            console.error("❌ Error sending message to API:", apiError);
+            Alert.alert("Lỗi", "Không thể gửi tin nhắn. Vui lòng thử lại.");
+            // Restore input if sending failed
+            setInput(messageText);
+            return;
           }
+        } else {
+          console.warn("⚠️ No conversation ID available");
+          Alert.alert("Lỗi", "Không tìm thấy cuộc trò chuyện");
+          // Restore input if sending failed
+          setInput(messageText);
+          return;
         }
 
         // Scroll to bottom
@@ -199,7 +292,7 @@ const ChatDetailScreen = ({ route, navigation }) => {
         }, 100);
       }
     } catch (error) {
-      console.error("Error in handleSend:", error);
+      console.error("❌ Error in handleSend:", error);
       Alert.alert("Lỗi", "Có lỗi xảy ra khi gửi tin nhắn");
       // Restore input if sending failed
       setInput(input);
@@ -399,42 +492,89 @@ const ChatDetailScreen = ({ route, navigation }) => {
         </View>
 
         <ScrollView
+          ref={flatListRef}
           contentContainerStyle={styles.chatContainer}
           showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => {
+            setTimeout(() => {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }, 100);
+          }}
         >
-          {messages.map((msg) => (
-            <TouchableOpacity
-              key={msg.id}
-              onLongPress={() =>
-                msg.type === "schedule" && showScheduleOptions(msg.id)
-              }
-            >
-              <View
-                style={[
-                  styles.messageBox,
-                  msg.from === "me" ? styles.me : styles.other,
-                  msg.type === "schedule" && {
-                    backgroundColor: "#E1F5FE",
-                    borderColor: "#0288D1",
-                    borderWidth: 1,
-                  },
-                ]}
+          {loading ? (
+            <View style={styles.loadingContainer}>
+              <Text>Đang tải tin nhắn...</Text>
+            </View>
+          ) : messages && Array.isArray(messages) && messages.length > 0 ? (
+            messages.map((msg) => (
+              <TouchableOpacity
+                key={msg.id}
+                onLongPress={() =>
+                  msg.type === "schedule" && showScheduleOptions(msg.id)
+                }
               >
-                <Text
+                <View
                   style={[
-                    styles.messageText,
-                    msg.from === "me" ? styles.textMe : styles.textOther,
-                    msg.type === "schedule" && {
-                      color: "#0288D1",
-                      fontWeight: "bold",
-                    },
+                    styles.messageContainer,
+                    msg.from === "me"
+                      ? styles.messageContainerMe
+                      : styles.messageContainerOther,
                   ]}
                 >
-                  {msg.text}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+                  {/* Hiển thị tên người gửi cho tin nhắn của người khác */}
+                  {msg.from === "other" && msg.senderName && (
+                    <Text style={styles.senderName}>{msg.senderName}</Text>
+                  )}
+
+                  <View
+                    style={[
+                      styles.messageBox,
+                      msg.from === "me" ? styles.me : styles.other,
+                      msg.type === "schedule" && {
+                        backgroundColor: "#E1F5FE",
+                        borderColor: "#0288D1",
+                        borderWidth: 1,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.messageText,
+                        msg.from === "me" ? styles.textMe : styles.textOther,
+                        msg.type === "schedule" && {
+                          color: "#0288D1",
+                          fontWeight: "bold",
+                        },
+                      ]}
+                    >
+                      {msg.text}
+                    </Text>
+                  </View>
+
+                  {/* Hiển thị thời gian và trạng thái đọc */}
+                  <View style={styles.messageFooter}>
+                    {msg.timestamp && (
+                      <Text style={styles.messageTime}>
+                        {new Date(msg.timestamp).toLocaleTimeString("vi-VN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                    )}
+                    {msg.from === "me" && (
+                      <Text style={styles.readStatus}>
+                        {msg.isRead ? "✓✓" : "✓"}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Chưa có tin nhắn nào</Text>
+            </View>
+          )}
         </ScrollView>
 
         <View style={styles.inputRow}>
@@ -537,11 +677,26 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingBottom: 100,
   },
+  messageContainer: {
+    marginBottom: 16,
+  },
+  messageContainerMe: {
+    alignItems: "flex-end",
+  },
+  messageContainerOther: {
+    alignItems: "flex-start",
+  },
+  senderName: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+    marginLeft: 4,
+  },
   messageBox: {
     maxWidth: "75%",
     padding: 14,
     borderRadius: 20,
-    marginBottom: 12,
+    marginBottom: 4,
   },
   me: {
     backgroundColor: "#2196F3",
@@ -560,6 +715,39 @@ const styles = StyleSheet.create({
   },
   textOther: {
     color: "#000",
+  },
+  messageFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    marginTop: 2,
+  },
+  messageTime: {
+    fontSize: 10,
+    color: "#999",
+    marginRight: 4,
+  },
+  readStatus: {
+    fontSize: 10,
+    color: "#2196F3",
+    marginLeft: 2,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 20,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#999",
+    textAlign: "center",
   },
   inputRow: {
     flexDirection: "row",

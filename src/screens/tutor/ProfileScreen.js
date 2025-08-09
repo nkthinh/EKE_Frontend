@@ -11,28 +11,60 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import BottomMenu from "../../components/common/BottomMenu";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../hooks/useAuth";
+import { walletService } from "../../services";
+import { subscriptionService } from "../../services/features";
+import { formatCurrency } from "../../utils/format";
 
 const { width } = Dimensions.get("window");
 
 const AccountScreen = ({ navigation }) => {
   const [subscription, setSubscription] = useState(null);
   const { userData, logout } = useAuth();
+  const [wallet, setWallet] = useState({ balance: 0 });
 
   useEffect(() => {
     const fetchPlan = async () => {
+      try {
+        const res = await subscriptionService.getCurrentSubscription();
+        const current = res?.data || res || null;
+        if (current) {
+          setSubscription(current);
+          await AsyncStorage.setItem(
+            "subscriptionPlan",
+            JSON.stringify(current)
+          );
+          return;
+        }
+      } catch {}
       const json = await AsyncStorage.getItem("subscriptionPlan");
       if (json) setSubscription(JSON.parse(json));
     };
     fetchPlan();
   }, []);
 
+  useEffect(() => {
+    const loadWallet = async () => {
+      try {
+        if (!userData?.id) return;
+        const data = await walletService.getWallet(userData.id);
+        const walletData = data?.data || data;
+        setWallet(walletData || { balance: 0 });
+      } catch (e) {
+        console.warn("Load wallet failed:", e?.message);
+      }
+    };
+    loadWallet();
+  }, [userData?.id]);
+
   const handleLogout = async () => {
     try {
-      await logout();
-      navigation.replace("TutorRegister");
+      await logout(navigation);
     } catch (error) {
       console.error("Logout error:", error);
-      navigation.replace("TutorRegister");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Splash" }],
+      });
     }
   };
 
@@ -62,6 +94,9 @@ const AccountScreen = ({ navigation }) => {
         </View>
 
         <Text style={styles.name}>{userName}</Text>
+        <Text style={styles.balanceText}>
+          Số dư: {formatCurrency(Number(wallet?.balance || 0))}
+        </Text>
 
         <View style={styles.actionRow}>
           {[
@@ -119,7 +154,11 @@ const AccountScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <BottomMenu navigation={navigation} userRole={userData?.role} />
+      <BottomMenu
+        navigation={navigation}
+        userRole={userData?.role}
+        activeTab="profile"
+      />
     </View>
   );
 };
@@ -143,10 +182,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 8,
-    marginBottom: 40,
-    width: "130%",
-    marginLeft: -60,
-    marginRight: -60,
+    marginBottom: 20,
+    width: "100%",
   },
   logo: {
     width: 150,
@@ -203,6 +240,12 @@ const styles = StyleSheet.create({
     color: "#222",
     marginTop: 30,
   },
+  balanceText: {
+    marginTop: 8,
+    fontSize: 16,
+    color: "#256DFF",
+    fontWeight: "600",
+  },
 
   actionRow: {
     flexDirection: "row",
@@ -248,6 +291,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F2F4F8",
     paddingTop: 0,
+    paddingBottom: 90, // chừa chỗ cho bottom menu
   },
   premiumCard: {
     backgroundColor: "#F2F4F8",

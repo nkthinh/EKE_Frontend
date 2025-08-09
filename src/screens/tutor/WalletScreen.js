@@ -5,24 +5,35 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import BottomMenu from "../../components/common/BottomMenu";
 import { useFocusEffect } from "@react-navigation/native";
 import { useAuth } from "../../hooks/useAuth";
+import { subscriptionService } from "../../services/features";
+import { formatCurrency } from "../../utils/format";
 
 const WalletScreen = ({ navigation }) => {
   const { userData } = useAuth();
   const [plan, setPlan] = useState(null);
 
   const fetchPlan = async () => {
+    try {
+      const res = await subscriptionService.getCurrentSubscription();
+      const current = res?.data || res || null;
+      if (current) {
+        setPlan(current);
+        await AsyncStorage.setItem("subscriptionPlan", JSON.stringify(current));
+        return;
+      }
+    } catch (e) {
+      console.warn("Tutor fetch current subscription failed:", e?.message);
+    }
+
     const json = await AsyncStorage.getItem("subscriptionPlan");
     if (json) {
       const parsed = JSON.parse(json);
-
-      // Bổ sung ngày gia hạn nếu chưa có
       if (!parsed.nextRenewalDate) {
         const nextDate = new Date(parsed.startDate);
         nextDate.setMonth(nextDate.getMonth() + 1);
         parsed.nextRenewalDate = nextDate.toISOString();
         await AsyncStorage.setItem("subscriptionPlan", JSON.stringify(parsed));
       }
-
       setPlan(parsed);
     } else {
       setPlan(null);
@@ -53,25 +64,26 @@ const WalletScreen = ({ navigation }) => {
   };
 
   const cancelAutoRenew = async () => {
-    Alert.alert(
-      "Huỷ tự động gia hạn",
-      "Bạn có chắc muốn huỷ tự động gia hạn gói này?",
-      [
-        { text: "Không" },
-        {
-          text: "Đồng ý",
-          onPress: async () => {
-            const updated = { ...plan, autoRenew: false };
-            await AsyncStorage.setItem(
-              "subscriptionPlan",
-              JSON.stringify(updated)
-            );
-            setPlan(updated);
-            alert("Đã huỷ tự động gia hạn.");
-          },
+    if (!plan?.id) {
+      alert("Không xác định được gói để huỷ.");
+      return;
+    }
+    Alert.alert("Huỷ đăng ký", "Bạn có chắc muốn huỷ gói hiện tại?", [
+      { text: "Không" },
+      {
+        text: "Đồng ý",
+        onPress: async () => {
+          try {
+            await subscriptionService.cancelSubscription(plan.id);
+            await AsyncStorage.removeItem("subscriptionPlan");
+            setPlan(null);
+            alert("Đã huỷ gói thành công.");
+          } catch (e) {
+            alert(e?.message || "Huỷ gói thất bại");
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
@@ -95,7 +107,11 @@ const WalletScreen = ({ navigation }) => {
             <Text style={styles.planName}>{plan.name}</Text>
 
             <Text style={styles.label}>Giá tiền:</Text>
-            <Text style={styles.value}>{getPrice(plan.name)}</Text>
+            <Text style={styles.value}>
+              {plan?.price != null
+                ? formatCurrency(Number(plan.price))
+                : getPrice(plan.name)}
+            </Text>
 
             <Text style={styles.label}>Ngày đăng ký:</Text>
             <Text style={styles.value}>
@@ -128,12 +144,12 @@ const WalletScreen = ({ navigation }) => {
             </Text>
           </View>
 
-          {plan.autoRenew && (
+          {plan && (
             <TouchableOpacity
               style={styles.cancelBtn}
               onPress={cancelAutoRenew}
             >
-              <Text style={styles.cancelText}>Huỷ Tự Động Gia Hạn</Text>
+              <Text style={styles.cancelText}>Huỷ đăng ký</Text>
             </TouchableOpacity>
           )}
         </>

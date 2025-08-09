@@ -22,6 +22,7 @@ import TutorProfileStep1 from "../screens/tutor/TutorProfileStep1";
 import TutorProfileStep2 from "../screens/tutor/TutorProfileStep2";
 import TutorProfileStep3 from "../screens/tutor/TutorProfileStep3";
 import TutorHomeScreen from "../screens/tutor/TutorHomeScreen";
+import TutorMessageScreen from "../screens/tutor/TutorMessageScreen";
 import RateScreen from "../screens/tutor/RateScreen";
 import ProfileScreen from "../screens/tutor/ProfileScreen";
 import UpgradeScreen from "../screens/tutor/UpgradeScreen";
@@ -55,6 +56,12 @@ import TutorLikedStudentsScreen from "../screens/tutor/TutorLikedStudentsScreen"
 import ChatListScreen from "../screens/chat/ChatListScreen";
 import ChatDetailScreen from "../screens/chat/ChatDetailScreen";
 import VideoCallScreen from "../screens/chat/VideoCallScreen";
+
+// Test Screens
+import TestConversationFlow from "../examples/TestConversationFlow";
+import TestNavigation from "../examples/TestNavigation";
+import TestMatchConversation from "../examples/TestMatchConversation";
+import TestConversationsByUser from "../examples/TestConversationsByUser";
 
 const Stack = createNativeStackNavigator();
 
@@ -108,6 +115,10 @@ export const AppNavigator = () => {
         component={TutorProfileStep3}
       />
       <Stack.Screen name={ROUTES.TUTOR_HOME} component={TutorHomeScreen} />
+      <Stack.Screen
+        name={ROUTES.TUTOR_MESSAGE}
+        component={TutorMessageScreen}
+      />
       <Stack.Screen name={ROUTES.RATE_SCREEN} component={RateScreen} />
       <Stack.Screen name={ROUTES.TUTOR_PROFILE} component={ProfileScreen} />
       <Stack.Screen name={ROUTES.UPGRADE_SCREEN} component={UpgradeScreen} />
@@ -171,6 +182,21 @@ export const AppNavigator = () => {
       <Stack.Screen name={ROUTES.CHAT_LIST} component={ChatListScreen} />
       <Stack.Screen name={ROUTES.CHAT_DETAIL} component={ChatDetailScreen} />
       <Stack.Screen name={ROUTES.VIDEO_CALL} component={VideoCallScreen} />
+
+      {/* Test Screens */}
+      <Stack.Screen
+        name={ROUTES.TEST_CONVERSATION_FLOW}
+        component={TestConversationFlow}
+      />
+      <Stack.Screen name={ROUTES.TEST_NAVIGATION} component={TestNavigation} />
+      <Stack.Screen
+        name={ROUTES.TEST_MATCH_CONVERSATION}
+        component={TestMatchConversation}
+      />
+      <Stack.Screen
+        name={ROUTES.TEST_CONVERSATIONS_BY_USER}
+        component={TestConversationsByUser}
+      />
     </Stack.Navigator>
   );
 };

@@ -1,32 +1,70 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import StudentLayout from "../../components/navigation/StudentLayout";
+import BottomMenu from "../../components/common/BottomMenu";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Dimensions } from "react-native";
 import { useAuth } from "../../hooks/useAuth";
+import { walletService } from "../../services";
+import { subscriptionService } from "../../services/features";
+import { formatCurrency } from "../../utils/format";
 
 const { width } = Dimensions.get("window");
 
 const ProfileScreen = ({ navigation }) => {
   const [subscription, setSubscription] = useState(null);
   const { userData, logout } = useAuth();
+  const [wallet, setWallet] = useState({ balance: 0 });
 
   useEffect(() => {
     const fetchPlan = async () => {
-      const json = await AsyncStorage.getItem("subscriptionPlan");
-      if (json) setSubscription(JSON.parse(json));
+      try {
+        // Prefer server current subscription
+        const res = await subscriptionService.getCurrentSubscription();
+        const current = res?.data || res || null;
+        if (current) {
+          setSubscription(current);
+          await AsyncStorage.setItem(
+            "subscriptionPlan",
+            JSON.stringify(current)
+          );
+        } else {
+          // fallback local
+          const json = await AsyncStorage.getItem("subscriptionPlan");
+          if (json) setSubscription(JSON.parse(json));
+        }
+      } catch (e) {
+        const json = await AsyncStorage.getItem("subscriptionPlan");
+        if (json) setSubscription(JSON.parse(json));
+      }
     };
     fetchPlan();
   }, []);
 
+  useEffect(() => {
+    const loadWallet = async () => {
+      try {
+        if (!userData?.id) return;
+        const data = await walletService.getWallet(userData.id);
+        // API có thể trả trực tiếp object hoặc trong data
+        const walletData = data?.data || data;
+        setWallet(walletData || { balance: 0 });
+      } catch (e) {
+        console.warn("Load wallet failed:", e?.message);
+      }
+    };
+    loadWallet();
+  }, [userData?.id]);
+
   const handleLogout = async () => {
     try {
-      await logout();
-      navigation.replace("StudentLogin");
+      await logout(navigation);
     } catch (error) {
       console.error("Logout error:", error);
-      navigation.replace("StudentLogin");
+      navigation.reset({
+        index: 0,
+        routes: [{ name: "Splash" }],
+      });
     }
   };
 
@@ -38,9 +76,8 @@ const ProfileScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* PHẦN TRÊN: Vòng bo trắng */}
       <View style={styles.topContainer}>
-        <Image source={require("../../assets/logo1.png")} style={styles.logo} />
         <Text style={styles.role}>
-          Phụ huynh/Học viên <Text style={styles.rating}></Text>
+          Học viên <Text style={styles.rating}></Text>
         </Text>
         <View style={styles.avatarWrapper}>
           <Image
@@ -54,6 +91,9 @@ const ProfileScreen = ({ navigation }) => {
         </View>
 
         <Text style={styles.name}>{userName}</Text>
+        <Text style={styles.balanceText}>
+          Số dư: {formatCurrency(Number(wallet?.balance || 0))}
+        </Text>
 
         <View style={styles.actionRow}>
           {[
@@ -111,7 +151,11 @@ const ProfileScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <StudentLayout navigation={navigation} />
+      <BottomMenu
+        navigation={navigation}
+        userRole={userData?.role}
+        activeTab="profile"
+      />
     </View>
   );
 };
@@ -135,10 +179,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 8,
-    marginBottom: 40,
-    width: "130%",
-    marginLeft: -60,
-    marginRight: -60,
+    marginBottom: 20,
+    width: "100%",
   },
   logo: {
     width: 150,
@@ -195,6 +237,12 @@ const styles = StyleSheet.create({
     color: "#222",
     marginTop: 30,
   },
+  balanceText: {
+    marginTop: 8,
+    fontSize: 16,
+    color: "#256DFF",
+    fontWeight: "600",
+  },
 
   actionRow: {
     flexDirection: "row",
@@ -239,7 +287,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#F2F4F8",
     paddingTop: 0,
-    marginBottom: 90,
+    marginTop: 25,
+    paddingBottom: 90, // chừa chỗ cho bottom menu
   },
 
   premiumCard: {

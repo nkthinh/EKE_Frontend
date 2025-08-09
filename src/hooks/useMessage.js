@@ -1,252 +1,368 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { Alert } from "react-native";
 import messageService from "../services/features/messageService";
-import signalRService from "../services/features/signalRService";
 import { useAuth } from "./useAuth";
 
 export const useMessage = () => {
   const [loading, setLoading] = useState(false);
-  const [conversations, setConversations] = useState([]);
-  const [currentConversation, setCurrentConversation] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [conversations, setConversations] = useState([]);
+  const [error, setError] = useState(null);
+  const [currentConversation, setCurrentConversation] = useState(null);
   const { userData } = useAuth();
 
-  // Initialize SignalR connection
-  useEffect(() => {
-    const initializeSignalR = async () => {
+  // ==================== CONVERSATION MANAGEMENT ====================
+
+  // Create conversation when tutor accepts student
+  const createConversationFromMatch = useCallback(
+    async (matchData) => {
+      if (!userData?.id) {
+        Alert.alert("Error", "User data not available");
+        return { success: false };
+      }
+
+      setLoading(true);
+      setError(null);
+
       try {
-        if (userData && !signalRService.isConnectionActive()) {
-          await signalRService.connect();
+        console.log("🔍 Creating conversation from match:", matchData);
+        const result = await messageService.createConversationFromMatch(
+          matchData
+        );
 
-          // Set up real-time message listener
-          signalRService.onNewMessage((message) => {
-            console.log("New message received:", message);
-            handleNewMessage(message);
-          });
-        }
-      } catch (error) {
-        console.error("Failed to initialize SignalR:", error);
+        console.log("📥 Conversation created:", result);
+
+        return {
+          success: true,
+          conversation: result,
+        };
+      } catch (err) {
+        console.error("❌ Create conversation error:", err);
+        Alert.alert(
+          "Error",
+          "Failed to create conversation. Please try again."
+        );
+        setError(err.message);
+        return { success: false, error: err.message };
+      } finally {
+        setLoading(false);
       }
-    };
-
-    initializeSignalR();
-
-    // Cleanup on unmount
-    return () => {
-      signalRService.removeAllListeners();
-    };
-  }, [userData]);
-
-  // Handle new message from SignalR
-  const handleNewMessage = useCallback(
-    (message) => {
-      // Update messages if it's for current conversation
-      if (
-        currentConversation &&
-        message.conversationId === currentConversation.id
-      ) {
-        setMessages((prevMessages) => [...prevMessages, message]);
-      }
-
-      // Update conversation list with latest message
-      setConversations((prevConversations) =>
-        prevConversations.map((conv) =>
-          conv.id === message.conversationId
-            ? {
-                ...conv,
-                lastMessage: message,
-                unreadCount: conv.unreadCount + 1,
-              }
-            : conv
-        )
-      );
     },
-    [currentConversation]
+    [userData?.id]
   );
 
-  // Get all conversations
-  const getConversations = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await messageService.getAllConversations();
+  // Get conversations by user ID (GET api/Conversations/user/{userid})
+  const getConversationsByUserId = useCallback(async (userId) => {
+    if (!userId) {
+      console.log("⚠️ No user ID provided");
+      return null;
+    }
 
-      if (response.success) {
-        setConversations(response.data || []);
-        return response.data;
-      } else {
-        throw new Error(response.message || "Failed to fetch conversations");
-      }
-    } catch (error) {
-      console.error("Error fetching conversations:", error);
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Getting conversations for user:", userId);
+      const result = await messageService.getConversationsByUserId(userId);
+
+      console.log("📥 User conversations:", result);
+
+      return result;
+    } catch (err) {
+      console.error("❌ Get user conversations error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get conversation by user ID (GET api/Conversations/user/{userid})
+  const getConversationByUserId = useCallback(async (userId) => {
+    if (!userId) {
+      console.log("⚠️ No user ID provided");
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Getting conversation for user:", userId);
+      const result = await messageService.getConversationByUserId(userId);
+
+      console.log("📥 User conversation:", result);
+
+      return result;
+    } catch (err) {
+      console.error("❌ Get user conversation error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get conversation by conversation ID (GET {conversationid})
+  const getConversationById = useCallback(async (conversationId) => {
+    if (!conversationId) {
+      console.log("⚠️ No conversation ID provided");
+      return null;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Getting conversation by ID:", conversationId);
+      const result = await messageService.getConversationById(conversationId);
+
+      console.log("📥 Conversation details:", result);
+
+      return result;
+    } catch (err) {
+      console.error("❌ Get conversation by ID error:", err);
+      setError(err.message);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  // Get all conversations for current user
+  const getAllConversations = useCallback(async () => {
+    if (!userData?.id) {
+      console.log("⚠️ No user data available");
+      return [];
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log("🔍 Getting all conversations for user:", userData.id);
+      const result = await messageService.getAllConversations();
+
+      console.log("📥 All conversations:", result);
+      setConversations(result || []);
+
+      return result || [];
+    } catch (err) {
+      console.error("❌ Get all conversations error:", err);
+      setError(err.message);
       setConversations([]);
-      throw error;
+      return [];
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [userData?.id]);
 
-  // Get messages for a specific conversation
-  const getConversationMessages = useCallback(async (conversationId) => {
-    try {
-      setLoading(true);
-      const response = await messageService.getConversationMessages(
-        conversationId
-      );
+  // ==================== MESSAGING APIs ====================
 
-      if (response.success) {
-        setMessages(response.data || []);
-
-        // Join SignalR group for this conversation
-        await signalRService.joinConversationGroup(conversationId);
-
-        return response.data;
-      } else {
-        throw new Error(response.message || "Failed to fetch messages");
-      }
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      setMessages([]);
-      throw error;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Send a new message
+  // Send message (POST api/Message) - senderId is user ID from login response
   const sendMessage = useCallback(
-    async (conversationId, content, type = "text") => {
-      try {
-        if (!userData || !userData.id) {
-          throw new Error("User data not available");
-        }
+    async (conversationId, content, messageType = 1) => {
+      if (!userData?.id) {
+        Alert.alert("Error", "User data not available");
+        return { success: false };
+      }
 
+      if (!conversationId || !content) {
+        Alert.alert(
+          "Error",
+          "Conversation ID and message content are required"
+        );
+        return { success: false };
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Prepare message data according to API specification
         const messageData = {
           conversationId: conversationId,
-          senderId: userData.id,
+          senderId: userData.id, // Use user ID from login response
           content: content,
-          messageType: type,
-          sentAt: new Date().toISOString(),
+          messageType: messageType, // 1 for text message
         };
 
-        console.log("Sending message:", messageData);
-        const response = await messageService.sendMessage(messageData);
+        console.log("🔍 Sending message:", messageData);
+        const result = await messageService.sendMessage(messageData);
 
-        if (response.success) {
-          // Add message to local state immediately for better UX
-          const newMessage = {
-            ...messageData,
-            id: response.data.id || Date.now(), // Use server ID or fallback
-            isRead: false,
-          };
+        console.log("📥 Message sent:", result);
 
-          setMessages((prevMessages) => [...prevMessages, newMessage]);
+        // Refresh messages for the conversation
+        await getConversationMessages(conversationId);
 
-          // Update conversation list
-          setConversations((prevConversations) =>
-            prevConversations.map((conv) =>
-              conv.id === conversationId
-                ? { ...conv, lastMessage: newMessage }
-                : conv
-            )
-          );
-
-          // Send real-time notification
-          await signalRService.sendMessageNotification(
-            conversationId,
-            newMessage
-          );
-
-          return response.data;
-        } else {
-          throw new Error(response.message || "Failed to send message");
-        }
-      } catch (error) {
-        console.error("Error sending message:", error);
-        Alert.alert("Lỗi", "Không thể gửi tin nhắn. Vui lòng thử lại.");
-        throw error;
+        return {
+          success: true,
+          message: result,
+        };
+      } catch (err) {
+        console.error("❌ Send message error:", err);
+        Alert.alert("Error", "Failed to send message. Please try again.");
+        setError(err.message);
+        return { success: false, error: err.message };
+      } finally {
+        setLoading(false);
       }
     },
-    [userData]
+    [userData?.id]
+  );
+
+  // Get messages in conversation (GET api/Messages/conversation/{conversationId}/messages)
+  const getConversationMessages = useCallback(
+    async (conversationId, page = 1, pageSize = 10) => {
+      if (!conversationId) {
+        console.log("⚠️ No conversation ID provided");
+        return null;
+      }
+
+      setLoading(true);
+      setError(null);
+
+      try {
+        console.log("🔍 Getting messages for conversation:", conversationId);
+        const result = await messageService.getConversationMessages(
+          conversationId,
+          page,
+          pageSize
+        );
+
+        console.log("📥 Conversation messages:", result);
+
+        // Handle different response structures
+        let messagesData = [];
+        if (Array.isArray(result)) {
+          messagesData = result;
+        } else if (result && Array.isArray(result.data)) {
+          messagesData = result.data;
+        } else if (result && Array.isArray(result.messages)) {
+          messagesData = result.messages;
+        }
+
+        // Thêm sortTime và sắp xếp đơn giản như student screen
+        const messagesWithSortTime = messagesData.map((msg) => ({
+          ...msg,
+          sortTime: new Date(msg.timestamp || msg.createdAt).getTime(),
+        }));
+
+        const sortedMessages = messagesWithSortTime.sort(
+          (a, b) => a.sortTime - b.sortTime
+        );
+
+        console.log("📱 Sorted messages in hook:", sortedMessages);
+        setMessages(sortedMessages);
+
+        return sortedMessages;
+      } catch (err) {
+        console.error("❌ Get conversation messages error:", err);
+        setError(err.message);
+        setMessages([]);
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
   );
 
   // Mark conversation as read
-  const markAsRead = useCallback(async (conversationId) => {
+  const markConversationAsRead = useCallback(async (conversationId) => {
+    if (!conversationId) {
+      console.log("⚠️ No conversation ID provided");
+      return false;
+    }
+
     try {
-      const response = await messageService.markConversationAsRead(
+      console.log("🔍 Marking conversation as read:", conversationId);
+      const result = await messageService.markConversationAsRead(
         conversationId
       );
 
-      if (response.success) {
-        // Update local state
-        setConversations((prevConversations) =>
-          prevConversations.map((conv) =>
-            conv.id === conversationId ? { ...conv, unreadCount: 0 } : conv
-          )
-        );
+      console.log("📥 Conversation marked as read:", result);
 
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) => ({ ...msg, isRead: true }))
-        );
-      }
-    } catch (error) {
-      console.error("Error marking conversation as read:", error);
+      return true;
+    } catch (err) {
+      console.error("❌ Mark conversation as read error:", err);
+      return false;
     }
   }, []);
 
-  // Set current conversation
+  // ==================== UTILITY METHODS ====================
+
+  // Set active conversation
   const setActiveConversation = useCallback(
-    async (conversation) => {
-      try {
-        // Leave previous conversation group
-        if (currentConversation) {
-          await signalRService.leaveConversationGroup(currentConversation.id);
-        }
-
-        setCurrentConversation(conversation);
-
-        if (conversation) {
-          // Load messages for new conversation
-          await getConversationMessages(conversation.id);
-
-          // Mark as read
-          await markAsRead(conversation.id);
-        }
-      } catch (error) {
-        console.error("Error setting active conversation:", error);
+    (conversation) => {
+      setCurrentConversation(conversation);
+      if (conversation?.id) {
+        getConversationMessages(conversation.id);
       }
     },
-    [currentConversation, getConversationMessages, markAsRead]
+    [getConversationMessages]
   );
 
-  // Get conversation by match ID
-  const getConversationByMatch = useCallback(async (matchId) => {
-    try {
-      setLoading(true);
-      const response = await messageService.getConversationByMatch(matchId);
-
-      if (response.success) {
-        return response.data;
-      } else {
-        throw new Error(response.message || "Failed to fetch conversation");
-      }
-    } catch (error) {
-      console.error("Error fetching conversation by match:", error);
-      throw error;
-    } finally {
-      setLoading(false);
+  // Get conversation ID for current user
+  const getCurrentUserConversationId = useCallback(async () => {
+    if (!userData?.id) {
+      console.log("⚠️ No user data available");
+      return null;
     }
+
+    try {
+      const conversation = await getConversationByUserId(userData.id);
+      return conversation?.id || null;
+    } catch (err) {
+      console.error("❌ Get current user conversation ID error:", err);
+      return null;
+    }
+  }, [userData?.id, getConversationByUserId]);
+
+  // Send message to specific conversation
+  const sendMessageToConversation = useCallback(
+    async (conversationId, content) => {
+      if (!conversationId || !content) {
+        Alert.alert(
+          "Error",
+          "Conversation ID and message content are required"
+        );
+        return { success: false };
+      }
+
+      return await sendMessage(conversationId, content, 1);
+    },
+    [sendMessage]
+  );
+
+  // Clear messages and conversations
+  const clearMessages = useCallback(() => {
+    setMessages([]);
+    setConversations([]);
+    setError(null);
+    setCurrentConversation(null);
   }, []);
 
   return {
     loading,
+    error,
+    messages,
     conversations,
     currentConversation,
-    messages,
-    getConversations,
-    getConversationMessages,
+    // Conversation methods
+    createConversationFromMatch,
+    getConversationsByUserId,
+    getConversationByUserId,
+    getConversationById,
+    getAllConversations,
+    // Message methods
     sendMessage,
-    markAsRead,
+    getConversationMessages,
+    markConversationAsRead,
+    // Utility methods
     setActiveConversation,
-    getConversationByMatch,
+    getCurrentUserConversationId,
+    sendMessageToConversation,
+    clearMessages,
   };
 };

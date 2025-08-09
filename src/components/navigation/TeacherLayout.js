@@ -1,37 +1,18 @@
 import React from "react";
-import { View, StyleSheet, TouchableOpacity } from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import { View, StyleSheet } from "react-native";
+import BottomMenu from "../common/BottomMenu";
+import { useAuth } from "../../hooks/useAuth";
 
-const TeacherLayout = ({ children, navigation }) => {
+const TeacherLayout = ({ children, navigation, activeTab }) => {
+  const { userData } = useAuth();
   return (
     <View style={styles.container}>
       <View style={styles.content}>{children}</View>
-      <View style={styles.navBar}>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("TutorHome")}
-        >
-          <Icon name="home" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("ChatList")}
-        >
-          <Icon name="chatbubble" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("RateScreen")}
-        >
-          <Icon name="medal" size={24} color="white" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.navItem}
-          onPress={() => navigation.navigate("TutorProfile")}
-        >
-          <Icon name="person" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
+      <BottomMenu
+        navigation={navigation}
+        userRole={userData?.role}
+        activeTab={activeTab}
+      />
     </View>
   );
 };
@@ -43,18 +24,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-  },
-  navBar: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    backgroundColor: "#31B7EC",
-    paddingVertical: 10,
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-  },
-  navItem: {
-    alignItems: "center",
+    paddingBottom: 90, // chừa chỗ cho BottomMenu cố định
   },
 });
 
