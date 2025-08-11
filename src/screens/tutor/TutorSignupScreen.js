@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { authService } from "../../services";
 import Input from "../../components/common/Input";
+import { CustomDatePicker } from "../../components/common";
 import { getUserRole } from "../../utils/storage";
 
 const { width } = Dimensions.get("window");
@@ -66,6 +67,8 @@ const TutorSignupScreen = ({ navigation, route }) => {
     }
   };
 
+
+
   const checkEmailAvailability = useCallback(async (email) => {
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) return;
 
@@ -103,6 +106,17 @@ const TutorSignupScreen = ({ navigation, route }) => {
       newErrors.phone = "Số điện thoại là bắt buộc";
     } else if (!/^\d{9,11}$/.test(form.phone)) {
       newErrors.phone = "Số điện thoại không hợp lệ (9-11 số)";
+    }
+    if (!form.dateOfBirth) {
+      newErrors.dateOfBirth = "Vui lòng chọn ngày sinh";
+    } else {
+      const selectedDate = new Date(form.dateOfBirth);
+      const today = new Date();
+      const age = today.getFullYear() - selectedDate.getFullYear();
+      if (age < 18 || age > 100) {
+        newErrors.dateOfBirth =
+          "Ngày sinh không hợp lệ (phải từ 18 tuổi trở lên)";
+      }
     }
     if (!form.password.trim()) {
       newErrors.password = "Mật khẩu là bắt buộc";
@@ -343,16 +357,18 @@ const TutorSignupScreen = ({ navigation, route }) => {
             leftIcon={<Ionicons name="call-outline" size={20} color="#666" />}
             error={errors.phone}
           />
-          <Input
-            label="Ngày sinh"
-            placeholder="DD/MM/YYYY"
+          <Text style={styles.label}>Ngày sinh</Text>
+          <CustomDatePicker
             value={form.dateOfBirth}
-            onChangeText={(text) => handleChange("dateOfBirth", text)}
-            leftIcon={
-              <Ionicons name="calendar-outline" size={20} color="#666" />
-            }
+            onDateChange={(date) => handleChange("dateOfBirth", date)}
+            placeholder="Chọn ngày sinh"
+            minAge={18}
+            maxAge={100}
             error={errors.dateOfBirth}
           />
+          {errors.dateOfBirth && (
+            <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
+          )}
 
           <Text style={styles.label}>Trình độ học vấn *</Text>
           <View
@@ -503,6 +519,7 @@ const TutorSignupScreen = ({ navigation, route }) => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
     </KeyboardAvoidingView>
   );
 };
@@ -575,6 +592,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
     marginLeft: 8,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  dateInputContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dateText: {
+    fontSize: 16,
+    color: "#333",
+    marginLeft: 12,
+    flex: 1,
+  },
+  placeholderText: {
+    color: "#999",
   },
   subjectsContainer: {
     flexDirection: "row",

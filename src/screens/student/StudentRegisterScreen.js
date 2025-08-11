@@ -16,6 +16,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { authService } from "../../services";
 import Input from "../../components/common/Input";
+import { CustomDatePicker } from "../../components/common";
 import { getUserRole } from "../../utils/storage";
 
 const { width } = Dimensions.get("window");
@@ -44,6 +45,7 @@ const StudentRegisterScreen = ({ navigation, route }) => {
   const [checkingEmail, setCheckingEmail] = useState(false);
 
   const handleChange = (key, value) => {
+    console.log("StudentRegisterScreen - handleChange:", key, value);
     setForm({ ...form, [key]: value });
     setErrors((prev) => ({ ...prev, [key]: null }));
 
@@ -79,6 +81,16 @@ const StudentRegisterScreen = ({ navigation, route }) => {
     }
     if (form.phone && !/^\d{9,11}$/.test(form.phone)) {
       newErrors.phone = "Số điện thoại không hợp lệ";
+    }
+    if (!form.dateOfBirth) {
+      newErrors.dateOfBirth = "Vui lòng chọn ngày sinh";
+    } else {
+      const selectedDate = new Date(form.dateOfBirth);
+      const today = new Date();
+      const age = today.getFullYear() - selectedDate.getFullYear();
+      if (age < 5 || age > 100) {
+        newErrors.dateOfBirth = "Ngày sinh không hợp lệ";
+      }
     }
     if (!form.password.trim()) {
       newErrors.password = "Mật khẩu là bắt buộc";
@@ -325,16 +337,24 @@ const StudentRegisterScreen = ({ navigation, route }) => {
             leftIcon={<Ionicons name="call-outline" size={20} color="#666" />}
             error={errors.phone}
           />
-          <Input
-            label="Ngày sinh"
-            placeholder="DD/MM/YYYY"
+          <Text style={styles.label}>Ngày sinh</Text>
+          <CustomDatePicker
             value={form.dateOfBirth}
-            onChangeText={(text) => handleChange("dateOfBirth", text)}
-            leftIcon={
-              <Ionicons name="calendar-outline" size={20} color="#666" />
-            }
+            onDateChange={(date) => {
+              console.log(
+                "StudentRegisterScreen - onDateChange received:",
+                date
+              );
+              handleChange("dateOfBirth", date);
+            }}
+            placeholder="Chọn ngày sinh"
+            minAge={5}
+            maxAge={100}
             error={errors.dateOfBirth}
           />
+          {errors.dateOfBirth && (
+            <Text style={styles.errorText}>{errors.dateOfBirth}</Text>
+          )}
           <Input
             label="Tên trường"
             placeholder="Nhập tên trường"
@@ -517,6 +537,35 @@ const styles = StyleSheet.create({
     fontSize: 14,
     marginTop: 4,
     marginLeft: 8,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+    marginLeft: 8,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    backgroundColor: "#f9f9f9",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  dateInputContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dateText: {
+    fontSize: 16,
+    color: "#333",
+    marginLeft: 12,
+    flex: 1,
+  },
+  placeholderText: {
+    color: "#999",
   },
   registerButton: {
     width: "100%",
