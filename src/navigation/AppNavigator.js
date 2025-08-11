@@ -29,6 +29,7 @@ import UpgradeScreen from "../screens/tutor/UpgradeScreen";
 import NotificationScreen from "../screens/tutor/NotificationScreen";
 import TutorProfileView from "../screens/tutor/TutorProfileView";
 import WalletScreen from "../screens/tutor/WalletScreen";
+import TutorDepositScreen from "../screens/tutor/TutorDepositScreen";
 
 // Student Screens
 import HomeScreen from "../screens/student/HomeScreen";
@@ -131,6 +132,10 @@ export const AppNavigator = () => {
         component={TutorProfileView}
       />
       <Stack.Screen name={ROUTES.TUTOR_WALLET} component={WalletScreen} />
+      <Stack.Screen
+        name={ROUTES.TUTOR_DEPOSIT}
+        component={TutorDepositScreen}
+      />
 
       {/* Student Screens */}
       <Stack.Screen name={ROUTES.STUDENT_HOME} component={HomeScreen} />

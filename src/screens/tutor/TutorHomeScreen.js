@@ -14,7 +14,6 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import MultiSlider from "@ptomasroos/react-native-multi-slider";
 import BottomMenu from "../../components/common/BottomMenu";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback } from "react";
 import { tutorService, notificationService } from "../../services";

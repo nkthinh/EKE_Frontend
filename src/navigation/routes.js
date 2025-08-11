@@ -27,6 +27,7 @@ export const ROUTES = {
   NOTIFICATION_SCREEN: "NotificationScreen",
   TUTOR_PROFILE_VIEW: "TutorProfileView",
   TUTOR_WALLET: "TutorWallet",
+  TUTOR_DEPOSIT: "TutorDeposit",
 
   // Student Screens
   STUDENT_HOME: "StudentHome",
@@ -87,6 +88,7 @@ export const ROUTE_GROUPS = {
     ROUTES.NOTIFICATION_SCREEN,
     ROUTES.TUTOR_PROFILE_VIEW,
     ROUTES.TUTOR_WALLET,
+    ROUTES.TUTOR_DEPOSIT,
   ],
 
   STUDENT: [

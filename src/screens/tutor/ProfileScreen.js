@@ -76,8 +76,6 @@ const AccountScreen = ({ navigation }) => {
     <View style={styles.container}>
       {/* PHẦN TRÊN: Vòng bo trắng */}
       <View style={styles.topContainer}>
-        <Image source={require("../../assets/logo1.png")} style={styles.logo} />
-
         <Text style={styles.role}>
           Gia Sư <Text style={styles.rating}>⭐ 4.8</Text>
         </Text>
@@ -182,7 +180,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 8,
-    marginBottom: 20,
+    marginBottom: 35,
     width: "100%",
   },
   logo: {

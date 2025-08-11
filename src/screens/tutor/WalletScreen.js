@@ -8,9 +8,33 @@ import { useAuth } from "../../hooks/useAuth";
 import { subscriptionService } from "../../services/features";
 import { formatCurrency } from "../../utils/format";
 
-const WalletScreen = ({ navigation }) => {
+const WalletScreen = ({ navigation, route }) => {
   const { userData } = useAuth();
   const [plan, setPlan] = useState(null);
+  const { requiredAmount } = route?.params || {};
+
+  // Hiển thị thông báo nạp tiền nếu có requiredAmount
+  useFocusEffect(
+    useCallback(() => {
+      if (requiredAmount && requiredAmount > 0) {
+        Alert.alert(
+          "Cần nạp tiền",
+          `Bạn cần nạp thêm ${requiredAmount.toLocaleString()} đ để đăng ký gói.`,
+          [
+            {
+              text: "Nạp tiền ngay",
+              onPress: () => {
+                navigation.navigate("TutorDeposit", {
+                  requiredAmount: requiredAmount,
+                });
+              },
+            },
+            { text: "Để sau" },
+          ]
+        );
+      }
+    }, [requiredAmount])
+  );
 
   const fetchPlan = async () => {
     try {
