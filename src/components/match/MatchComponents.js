@@ -76,7 +76,7 @@ const SwipeCard = ({ tutor, onSwipe }) => {
           source={
             tutor.images && tutor.images.length > 0
               ? { uri: tutor.images[currentImageIndex] }
-              : require("../../assets/teacher.png")
+              : require("../../assets/teacher.jpg")
           }
           style={styles.cardImage}
         />

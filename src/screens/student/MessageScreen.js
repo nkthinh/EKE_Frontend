@@ -190,7 +190,7 @@ const MessageScreen = ({ navigation }) => {
           source={
             item.participantImage ||
             item.image ||
-            require("../../assets/teacher.png")
+            require("../../assets/teacher.jpg")
           }
           style={styles.avatar}
         />

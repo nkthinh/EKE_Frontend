@@ -142,7 +142,7 @@ const SwipeActionScreen = ({ navigation }) => {
         source={
           item.profileImage
             ? { uri: item.profileImage }
-            : require("../../assets/teacher.png")
+            : require("../../assets/teacher.jpg")
         }
         style={styles.profileImage}
       />
