@@ -6,10 +6,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Image,
+  Platform,
 } from "react-native";
 import StudentLayout from "../../components/navigation/StudentLayout";
 import Icon from "react-native-vector-icons/Ionicons";
 import { Picker } from "@react-native-picker/picker";
+import { CustomDatePicker } from "../../components/common";
 
 const UpdateProfile = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState("Cá nhân");
@@ -22,11 +24,28 @@ const UpdateProfile = ({ navigation }) => {
   const [className, setClassName] = useState("");
   const [academicPerformance, setAcademicPerformance] = useState("Trung Bình");
 
-  const handleDateChange = (text) => {
-    // Simple date validation (e.g., dd/mm/yyyy format)
-    if (/^\d{2}\/\d{2}\/\d{4}$/.test(text)) {
-      setBirthDate(text);
+  const onDateChange = (event, date) => {
+    setShowDatePicker(Platform.OS === "ios");
+    if (date) {
+      setSelectedDate(date);
+      const formattedDate = date.toISOString();
+      setBirthDate(formattedDate);
     }
+  };
+
+  // Tính toán năm tối thiểu và tối đa cho datepicker
+  const getMinDate = () => {
+    const today = new Date();
+    return new Date(today.getFullYear() - 100, 0, 1); // 100 năm trước
+  };
+
+  const getMaxDate = () => {
+    const today = new Date();
+    return new Date(today.getFullYear() - 5, 11, 31); // 5 năm trước
+  };
+
+  const showDatePickerModal = () => {
+    setShowDatePicker(true);
   };
 
   return (
@@ -136,12 +155,12 @@ const UpdateProfile = ({ navigation }) => {
                 value={studentFullName}
               />
               <Text style={styles.label}>Ngày sinh</Text>
-              <TextInput
-                style={styles.input}
-                onChangeText={handleDateChange}
-                placeholder="dd/mm/yyyy"
+              <CustomDatePicker
                 value={birthDate}
-                keyboardType="numeric"
+                onDateChange={setBirthDate}
+                placeholder="Chọn ngày sinh"
+                minAge={5}
+                maxAge={100}
               />
               <Text style={styles.label}>Giới tính</Text>
               <View style={styles.selectContainer}>
@@ -182,6 +201,16 @@ const UpdateProfile = ({ navigation }) => {
           </>
         )}
       </View>
+      {showDatePicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display="default"
+          onChange={onDateChange}
+          minimumDate={getMinDate()}
+          maximumDate={getMaxDate()}
+        />
+      )}
     </StudentLayout>
   );
 };
@@ -332,6 +361,27 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    paddingVertical: 12,
+  },
+  dateInputContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  dateText: {
+    fontSize: 16,
+    color: "#333",
+    marginLeft: 12,
+    flex: 1,
+  },
+  placeholderText: {
+    color: "#999",
   },
 });
 
