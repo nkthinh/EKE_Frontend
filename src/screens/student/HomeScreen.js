@@ -130,7 +130,13 @@ const ProfileCard = React.memo(
           {/* Profile Image with Overlays */}
           <View style={styles.imageContainer}>
             <Image
-              source={imageError ? assets.defaultProfileImage : profile.image}
+              source={
+                imageError
+                  ? assets.defaultProfileImage
+                  : profile.profileImage
+                  ? { uri: profile.profileImage }
+                  : profile.image
+              }
               style={styles.profileImage}
               resizeMode="cover"
               onError={(error) => {
@@ -140,7 +146,10 @@ const ProfileCard = React.memo(
                   "for profile:",
                   profile.fullName
                 );
-                console.log("Image source:", profile.image);
+                console.log(
+                  "Image source:",
+                  profile.profileImage || profile.image
+                );
                 setImageError(true);
               }}
               onLoad={() => {

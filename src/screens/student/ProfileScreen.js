@@ -81,7 +81,11 @@ const ProfileScreen = ({ navigation }) => {
         </Text>
         <View style={styles.avatarWrapper}>
           <Image
-            source={require("../../assets/avatar.png")}
+            source={
+              userData?.profileImage
+                ? { uri: userData.profileImage }
+                : require("../../assets/avatar.png")
+            }
             style={styles.avatar}
           />
           <View style={styles.avatarBorder} />

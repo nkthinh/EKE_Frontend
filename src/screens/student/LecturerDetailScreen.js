@@ -72,7 +72,11 @@ const LecturerDetailScreen = ({ navigation, route }) => {
 
         <View style={styles.imageContainer}>
           <Image
-            source={profile.image}
+            source={
+              profile.profileImage
+                ? { uri: profile.profileImage }
+                : profile.image
+            }
             style={styles.profileImage}
             defaultSource={require("../../assets/girl.jpg")}
             onError={(e) =>

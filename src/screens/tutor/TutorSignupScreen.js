@@ -40,6 +40,7 @@ const TutorSignupScreen = ({ navigation, route }) => {
     hourlyRate: "",
     introduction: "",
     subjectIds: [],
+    profileImage: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -66,8 +67,6 @@ const TutorSignupScreen = ({ navigation, route }) => {
       checkEmailAvailability(value);
     }
   };
-
-
 
   const checkEmailAvailability = useCallback(async (email) => {
     if (!email || !/^\S+@\S+\.\S+$/.test(email)) return;
@@ -130,8 +129,12 @@ const TutorSignupScreen = ({ navigation, route }) => {
     }
     if (!form.educationLevel.trim())
       newErrors.educationLevel = "Trình độ học vấn là bắt buộc";
-    if (form.subjectIds.length === 0)
+    if (form.subjectIds.length === 0) {
       newErrors.subjectIds = "Vui lòng chọn ít nhất một môn học";
+    }
+    if (form.profileImage && !/^https?:\/\/.+/.test(form.profileImage)) {
+      newErrors.profileImage = "Link ảnh không hợp lệ";
+    }
 
     // Optional validations
     if (
@@ -214,6 +217,7 @@ const TutorSignupScreen = ({ navigation, route }) => {
           hourlyRate: form.hourlyRate ? parseFloat(form.hourlyRate) : 0,
           introduction: form.introduction || "string",
           subjectIds: form.subjectIds.length > 0 ? form.subjectIds : [1, 2, 3],
+          profileImage: form.profileImage || "https://via.placeholder.com/150",
         };
 
         console.log("🎯 About to call register/profile API");
@@ -433,15 +437,22 @@ const TutorSignupScreen = ({ navigation, route }) => {
 
           <Input
             label="Giới thiệu bản thân"
-            placeholder="Mô tả về bản thân, kinh nghiệm giảng dạy..."
+            placeholder="Mô tả về bản thân và kinh nghiệm giảng dạy"
             value={form.introduction}
             onChangeText={(text) => handleChange("introduction", text)}
-            leftIcon={
-              <Ionicons name="chatbubble-outline" size={20} color="#666" />
-            }
+            leftIcon={<Ionicons name="person-outline" size={20} color="#666" />}
             error={errors.introduction}
             multiline
             numberOfLines={3}
+          />
+
+          <Input
+            label="Link ảnh đại diện"
+            placeholder="https://example.com/avatar.jpg"
+            value={form.profileImage}
+            onChangeText={(text) => handleChange("profileImage", text)}
+            leftIcon={<Ionicons name="image-outline" size={20} color="#666" />}
+            error={errors.profileImage}
           />
 
           <Text style={styles.label}>Môn học dạy *</Text>
@@ -519,7 +530,6 @@ const TutorSignupScreen = ({ navigation, route }) => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-
     </KeyboardAvoidingView>
   );
 };
