@@ -27,7 +27,7 @@ const slides = [
     key: "2",
     title: "Tìm Gia Sư – Học Dễ Dàng",
     subtitle: "Tiến Bộ Nhanh Chóng!",
-    image: require("../../assets/teacher.png"),
+    image: require("../../assets/teacher.jpg"),
     description:
       "Ứng dụng giúp học viên tìm kiếm gia sư phù hợp nhanh chóng, kết nối trực tiếp với giáo viên giỏi, hỗ trợ học tập mọi lúc, mọi nơi.",
     gradient: ["#f8f9fa", "#e9ecef"],

@@ -171,8 +171,8 @@ const TutorProfileViewTabs = ({ navigation }) => {
             <TouchableOpacity onPress={pickAvatar}>
               <Image
                 source={
-                  form.avatar
-                    ? { uri: form.avatar }
+                  form.profileImage
+                    ? { uri: form.profileImage }
                     : require("../../assets/avatar.png")
                 }
                 style={styles.avatar}

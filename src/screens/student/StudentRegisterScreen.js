@@ -38,6 +38,7 @@ const StudentRegisterScreen = ({ navigation, route }) => {
     learningGoals: "",
     budgetMin: "",
     budgetMax: "",
+    profileImage: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -113,6 +114,9 @@ const StudentRegisterScreen = ({ navigation, route }) => {
     ) {
       newErrors.budgetMax = "Ngân sách tối đa phải lớn hơn ngân sách tối thiểu";
     }
+    if (form.profileImage && !/^https?:\/\/.+/.test(form.profileImage)) {
+      newErrors.profileImage = "Link ảnh không hợp lệ";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -180,6 +184,7 @@ const StudentRegisterScreen = ({ navigation, route }) => {
           hourlyRate: 0,
           introduction: "string",
           subjectIds: [1, 2, 3],
+          profileImage: form.profileImage || "",
         };
 
         console.log("🎯 About to call register/profile API");
@@ -421,6 +426,14 @@ const StudentRegisterScreen = ({ navigation, route }) => {
             keyboardType="numeric"
             leftIcon={<Ionicons name="cash-outline" size={20} color="#666" />}
             error={errors.budgetMax}
+          />
+          <Input
+            label="Link ảnh đại diện"
+            placeholder="https://example.com/avatar.jpg"
+            value={form.profileImage}
+            onChangeText={(text) => handleChange("profileImage", text)}
+            leftIcon={<Ionicons name="image-outline" size={20} color="#666" />}
+            error={errors.profileImage}
           />
           <Input
             label="Mật khẩu *"

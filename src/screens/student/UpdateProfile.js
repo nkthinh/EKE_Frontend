@@ -23,6 +23,39 @@ const UpdateProfile = ({ navigation }) => {
   const [birthDate, setBirthDate] = useState("");
   const [className, setClassName] = useState("");
   const [academicPerformance, setAcademicPerformance] = useState("Trung Bình");
+  const [profileImage, setProfileImage] = useState("");
+
+  const validateForm = () => {
+    const errors = {};
+
+    if (profileImage && !/^https?:\/\/.+/.test(profileImage)) {
+      errors.profileImage = "Link ảnh không hợp lệ";
+    }
+
+    return errors;
+  };
+
+  const handleSubmit = () => {
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      // Hiển thị lỗi
+      console.log("Validation errors:", errors);
+      return;
+    }
+
+    // Xử lý submit
+    console.log("Submitting profile update:", {
+      fullName,
+      email,
+      phone,
+      city,
+      profileImage,
+      studentFullName,
+      birthDate,
+      className,
+      academicPerformance,
+    });
+  };
 
   const onDateChange = (event, date) => {
     setShowDatePicker(Platform.OS === "ios");
@@ -95,10 +128,21 @@ const UpdateProfile = ({ navigation }) => {
           <>
             <View style={styles.profileImageContainer}>
               <Image
-                source={require("../../assets/girl.jpg")}
+                source={
+                  profileImage
+                    ? { uri: profileImage }
+                    : require("../../assets/girl.jpg")
+                }
                 style={styles.profileImage}
               />
             </View>
+            <Text style={styles.label}>Link ảnh đại diện</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={setProfileImage}
+              placeholder="https://example.com/avatar.jpg"
+              value={profileImage}
+            />
             <Text style={styles.label}>Họ và tên</Text>
             <TextInput
               style={styles.input}
@@ -134,7 +178,10 @@ const UpdateProfile = ({ navigation }) => {
                 <Picker.Item label="Đà Nẵng" value="Đà Nẵng" />
               </Picker>
             </View>
-            <TouchableOpacity style={styles.continueButton}>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleSubmit}
+            >
               <Text style={styles.continueText}>Tiếp Tục</Text>
             </TouchableOpacity>
           </>
@@ -194,7 +241,10 @@ const UpdateProfile = ({ navigation }) => {
               <TouchableOpacity style={styles.backButton}>
                 <Text style={styles.backText}>Quay lại</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.submitButton}>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={handleSubmit}
+              >
                 <Text style={styles.submitText}>Hoàn Thành</Text>
               </TouchableOpacity>
             </View>
